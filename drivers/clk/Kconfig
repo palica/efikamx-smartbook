@@ -8,3 +8,6 @@ config HAVE_CLK_PREPARE
 
 config HAVE_MACH_CLKDEV
 	bool
+
+config USE_COMMON_STRUCT_CLK
+	bool
