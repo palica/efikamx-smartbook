@@ -202,3 +202,4 @@ obj-$(CONFIG_ARCH_OMAP)	+= omap/
 ccflags-y += -Idrivers/media/dvb/dvb-core
 ccflags-y += -Idrivers/media/dvb/frontends
 ccflags-y += -Idrivers/media/common/tuners
+obj-$(CONFIG_ARCH_MXC)		+= imx/

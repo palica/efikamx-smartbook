@@ -1177,3 +1177,6 @@ config VIDEO_SAMSUNG_S5P_MFC
 	    MFC 5.1 driver for V4L2.
 
 endif # V4L_MEM2MEM_DRIVERS
+
+source "drivers/media/video/imx/Kconfig"
+

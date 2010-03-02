@@ -1,0 +1,7 @@
+
+config IMX27_V4L2_OUTPUT
+	tristate "Support for i.MX v4l2 output device"
+	select VIDEOBUF_DMA_CONTIG
+	help
+	  Say y here to support the v4l2 output driver for i.MX SoCs. 
+
