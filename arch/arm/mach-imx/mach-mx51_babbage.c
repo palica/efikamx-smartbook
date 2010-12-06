@@ -19,10 +19,14 @@
 #include <linux/input.h>
 #include <linux/spi/flash.h>
 #include <linux/spi/spi.h>
+#include <drm/imx-ipu-v3.h>
+#include <drm/drmP.h>
+#include "drm/sdrm_encon.h"
 
 #include <mach/common.h>
 #include <mach/hardware.h>
 #include <mach/iomux-mx51.h>
+#include <mach/ipu-v3.h>
 
 #include <asm/setup.h>
 #include <asm/mach-types.h>
@@ -163,6 +167,40 @@ static iomux_v3_cfg_t mx51babbage_pads[] = {
 	MX51_PAD_CSPI1_SCLK__ECSPI1_SCLK,
 	MX51_PAD_CSPI1_SS0__GPIO4_24,
 	MX51_PAD_CSPI1_SS1__GPIO4_25,
+
+	/* Display */
+	MX51_PAD_DISPB2_SER_DIN__GPIO3_5,
+	MX51_PAD_DISPB2_SER_DIO__GPIO3_6,
+	MX51_PAD_NANDF_D12__GPIO3_28,
+
+	MX51_PAD_DISP1_DAT0__DISP1_DAT0,
+	MX51_PAD_DISP1_DAT1__DISP1_DAT1,
+	MX51_PAD_DISP1_DAT2__DISP1_DAT2,
+	MX51_PAD_DISP1_DAT3__DISP1_DAT3,
+	MX51_PAD_DISP1_DAT4__DISP1_DAT4,
+	MX51_PAD_DISP1_DAT5__DISP1_DAT5,
+	MX51_PAD_DISP1_DAT6__DISP1_DAT6,
+	MX51_PAD_DISP1_DAT7__DISP1_DAT7,
+	MX51_PAD_DISP1_DAT8__DISP1_DAT8,
+	MX51_PAD_DISP1_DAT9__DISP1_DAT9,
+	MX51_PAD_DISP1_DAT10__DISP1_DAT10,
+	MX51_PAD_DISP1_DAT11__DISP1_DAT11,
+	MX51_PAD_DISP1_DAT12__DISP1_DAT12,
+	MX51_PAD_DISP1_DAT13__DISP1_DAT13,
+	MX51_PAD_DISP1_DAT14__DISP1_DAT14,
+	MX51_PAD_DISP1_DAT15__DISP1_DAT15,
+	MX51_PAD_DISP1_DAT16__DISP1_DAT16,
+	MX51_PAD_DISP1_DAT17__DISP1_DAT17,
+	MX51_PAD_DISP1_DAT18__DISP1_DAT18,
+	MX51_PAD_DISP1_DAT19__DISP1_DAT19,
+	MX51_PAD_DISP1_DAT20__DISP1_DAT20,
+	MX51_PAD_DISP1_DAT21__DISP1_DAT21,
+	MX51_PAD_DISP1_DAT22__DISP1_DAT22,
+	MX51_PAD_DISP1_DAT23__DISP1_DAT23,
+	MX51_PAD_DI_GP4__DI2_PIN15,
+
+	/* I2C DVI enable */
+	MX51_PAD_CSI2_HSYNC__GPIO4_14,
 };
 
 /* Serial ports */
@@ -349,6 +387,56 @@ static const struct esdhc_platform_data mx51_babbage_sd2_data __initconst = {
 	.wp_type = ESDHC_WP_GPIO,
 };
 
+static struct imx_ipuv3_platform_data ipu_data = {
+};
+
+#define GPIO_DVI_DETECT	IMX_GPIO_NR(3, 28)
+#define GPIO_DVI_RESET	IMX_GPIO_NR(3, 5)
+#define GPIO_DVI_PWRDN	IMX_GPIO_NR(3, 6)
+#define GPIO_DVI_I2C	IMX_GPIO_NR(4, 14)
+
+static struct sdrm_encon_dummy_pdata crtc0_data = {
+	.drm_name = "imx-drm.0",
+	.possible_crtcs = 0x1,
+	.possible_clones = 0x1,
+	.num_modes = 0,
+};
+
+static struct sdrm_encon_dummy_pdata crtc1_data = {
+	.drm_name = "imx-drm.0",
+	.possible_crtcs = 0x2,
+	.possible_clones = 0x2,
+	.num_modes = 0,
+};
+
+static void __init mx51_babbage_fb_init(void)
+{
+	int ret;
+	struct gpio gpios[] = {
+		{
+			.gpio = GPIO_DVI_RESET,
+			.flags = GPIOF_OUT_INIT_LOW,
+			.label = "dvi reset",
+		}, {
+			.gpio = GPIO_DVI_PWRDN,
+			.flags = GPIOF_OUT_INIT_HIGH,
+			.label = "dvi powerdown",
+		},
+	};
+
+	ret = gpio_request_array(gpios, ARRAY_SIZE(gpios));
+	if (ret)
+		return;
+
+	platform_device_register_data(NULL, "drm-encon-dummy", 0,
+                        &crtc0_data, sizeof(crtc0_data));
+
+	platform_device_register_data(NULL, "drm-encon-dummy", 1,
+                        &crtc1_data, sizeof(crtc1_data));
+
+	imx51_add_ipuv3(&ipu_data);
+}
+
 void __init imx51_babbage_common_init(void)
 {
 	mxc_iomux_v3_setup_multiple_pads(mx51babbage_pads,
@@ -406,6 +494,14 @@ static void __init mx51_babbage_init(void)
 		ARRAY_SIZE(mx51_babbage_spi_board_info));
 	imx51_add_ecspi(0, &mx51_babbage_spi_pdata);
 	imx51_add_imx2_wdt(0, NULL);
+
+	mx51_babbage_fb_init();
+}
+
+static void __init mx51_babbage_map_io(void)
+{
+	mx51_map_io();
+	init_consistent_dma_size(SZ_8M);
 }
 
 static void __init mx51_babbage_timer_init(void)
@@ -420,7 +516,7 @@ static struct sys_timer mx51_babbage_timer = {
 MACHINE_START(MX51_BABBAGE, "Freescale MX51 Babbage Board")
 	/* Maintainer: Amit Kucheria <amit.kucheria@canonical.com> */
 	.atag_offset = 0x100,
-	.map_io = mx51_map_io,
+	.map_io = mx51_babbage_map_io,
 	.init_early = imx51_init_early,
 	.init_irq = mx51_init_irq,
 	.handle_irq = imx51_handle_irq,
