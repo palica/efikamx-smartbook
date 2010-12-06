@@ -331,3 +331,14 @@ struct imx_ahci_imx_data {
 struct platform_device *__init imx_add_ahci_imx(
 		const struct imx_ahci_imx_data *data,
 		const struct ahci_platform_data *pdata);
+
+#include <mach/ipu-v3.h>
+struct imx_ipuv3_data {
+	const char *devid;
+	resource_size_t iobase;
+	resource_size_t irq_err;
+	resource_size_t irq;
+};
+struct platform_device *__init imx_add_ipuv3(
+		const struct imx_ipuv3_data *data,
+		const struct imx_ipuv3_platform_data *pdata);

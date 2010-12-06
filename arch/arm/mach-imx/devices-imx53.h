@@ -46,3 +46,7 @@ extern const struct imx_pata_imx_data imx53_pata_imx_data;
 	imx_add_pata_imx(&imx53_pata_imx_data)
 
 extern struct platform_device *__init imx53_add_ahci_imx(void);
+
+extern const struct imx_ipuv3_data imx53_ipuv3_data __initconst;
+#define imx53_add_ipuv3(pdata)	\
+	imx_add_ipuv3(&imx53_ipuv3_data, pdata)
