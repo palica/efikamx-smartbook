@@ -93,6 +93,7 @@ void clkdev_add(struct clk_lookup *cl)
 {
 	mutex_lock(&clocks_mutex);
 	list_add_tail(&cl->node, &clocks);
+	clk_debug_register(cl->clk);
 	mutex_unlock(&clocks_mutex);
 }
 EXPORT_SYMBOL(clkdev_add);
@@ -102,6 +103,7 @@ void __init clkdev_add_table(struct clk_lookup *cl, size_t num)
 	mutex_lock(&clocks_mutex);
 	while (num--) {
 		list_add_tail(&cl->node, &clocks);
+		clk_debug_register(cl->clk);
 		cl++;
 	}
 	mutex_unlock(&clocks_mutex);

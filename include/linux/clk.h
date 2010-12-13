@@ -54,13 +54,25 @@ struct clk {
 	unsigned int		prepare_count;
 	spinlock_t		enable_lock;
 	struct mutex		prepare_lock;
+#ifdef CONFIG_CLK_DEBUG
+#define CLK_NAME_LEN	32
+	char			name[CLK_NAME_LEN];
+	struct dentry		*dentry;
+#endif
 };
+
+#ifdef CONFIG_CLK_DEBUG
+#define __INIT_CLK_DEBUG(n)	.name = #n,
+#else
+#define __INIT_CLK_DEBUG(n)
+#endif
 
 /* static initialiser for clocks. */
 #define INIT_CLK(name, o) {						\
 	.ops		= &o,						\
 	.enable_lock	= __SPIN_LOCK_UNLOCKED(name.enable_lock),	\
 	.prepare_lock	= __MUTEX_INITIALIZER(name.prepare_lock),	\
+	__INIT_CLK_DEBUG(name)						\
 }
 
 /**
@@ -353,5 +365,11 @@ struct clk *clk_get_sys(const char *dev_id, const char *con_id);
  */
 int clk_add_alias(const char *alias, const char *alias_dev_name, char *id,
 			struct device *dev);
+
+#ifdef CONFIG_CLK_DEBUG
+void clk_debug_register(struct clk *clk);
+#else
+static inline void clk_debug_register(struct clk *clk) { }
+#endif
 
 #endif
