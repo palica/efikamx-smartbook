@@ -113,5 +113,29 @@ extern struct clk_ops clk_group_ops;
 		.num_clks = ARRAY_SIZE(_clks), \
 	}
 
+/**
+ * pll v2
+ *
+ * @clk		clock source
+ * @parent	the parent clock
+ * @base	base address of pll registers
+ *
+ * PLL clock version two, found on i.MX50/51/53
+ */
+struct clk_pllv2 {
+	struct clk	clk;
+	struct clk	*parent;
+	void __iomem	*base;
+};
+
+extern struct clk_ops clk_pllv2_ops;
+
+#define DEFINE_CLK_PLLV2(name, _parent, _base) \
+	struct clk_pllv2 name = { \
+		.clk = INIT_CLK(name.clk, clk_pllv2_ops), \
+		.parent = (_parent), \
+		.base = (_base), \
+	}
+
 #endif /* __ASSEMBLY__ */
 #endif /* __ASM_ARCH_MXC_CLOCK_H__ */
