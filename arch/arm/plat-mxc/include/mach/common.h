@@ -139,4 +139,9 @@ extern void imx6q_pm_init(void);
 static inline void imx6q_pm_init(void) {}
 #endif
 
+/*
+ * setup the ldb for pll4 and adjust pll4 to given rate.
+ */
+int mx53_clock_ldb_pll4(unsigned long rate);
+
 #endif

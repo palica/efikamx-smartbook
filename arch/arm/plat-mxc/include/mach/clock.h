@@ -25,6 +25,8 @@
 
 struct module;
 
+#ifdef CONFIG_USE_COMMON_STRUCT_CLK
+#else
 struct clk {
 	int id;
 	/* Source clock this clk depends on */
@@ -56,6 +58,7 @@ struct clk {
 	/* Function ptr to set the parent clock of the clock. */
 	int (*set_parent) (struct clk *, struct clk *);
 };
+#endif
 
 int clk_register(struct clk *clk);
 void clk_unregister(struct clk *clk);
