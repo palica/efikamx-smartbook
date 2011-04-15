@@ -144,3 +144,80 @@ struct clk_ops clk_fixed_ops = {
 	.get_rate = clk_fixed_get_rate,
 };
 EXPORT_SYMBOL_GPL(clk_fixed_ops);
+
+int clk_parent_prepare(struct clk *clk)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return -ENOSYS;
+
+	return clk_prepare(parent);
+}
+EXPORT_SYMBOL_GPL(clk_parent_prepare);
+
+void clk_parent_unprepare(struct clk *clk)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return;
+
+	clk_unprepare(parent);
+}
+EXPORT_SYMBOL_GPL(clk_parent_unprepare);
+
+int clk_parent_enable(struct clk *clk)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return 0;
+
+	return clk_enable(parent);
+}
+EXPORT_SYMBOL_GPL(clk_parent_enable);
+
+void clk_parent_disable(struct clk *clk)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return;
+
+	clk_disable(parent);
+}
+EXPORT_SYMBOL_GPL(clk_parent_disable);
+
+unsigned long clk_parent_get_rate(struct clk *clk)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return 0;
+
+	return clk_get_rate(parent);
+}
+EXPORT_SYMBOL_GPL(clk_parent_get_rate);
+
+long clk_parent_round_rate(struct clk *clk, unsigned long rate)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return -ENOSYS;
+
+	return clk_round_rate(parent, rate);
+}
+EXPORT_SYMBOL_GPL(clk_parent_round_rate);
+
+int clk_parent_set_rate(struct clk *clk, unsigned long rate)
+{
+	struct clk *parent = clk_get_parent(clk);
+
+	if (IS_ERR(parent))
+		return -ENOSYS;
+
+	return clk_set_rate(parent, rate);
+}
+EXPORT_SYMBOL_GPL(clk_parent_set_rate);

@@ -165,6 +165,15 @@ extern struct clk_ops clk_fixed_ops;
 #define DEFINE_CLK_FIXED(name, r) \
 	struct clk_fixed name = INIT_CLK_FIXED(name, r)
 
+/* generic pass-through-to-parent functions */
+int clk_parent_prepare(struct clk *clk);
+void clk_parent_unprepare(struct clk *clk);
+int clk_parent_enable(struct clk *clk);
+void clk_parent_disable(struct clk *clk);
+unsigned long clk_parent_get_rate(struct clk *clk);
+long clk_parent_round_rate(struct clk *clk, unsigned long rate);
+int clk_parent_set_rate(struct clk *clk, unsigned long rate);
+
 #else /* !CONFIG_USE_COMMON_STRUCT_CLK */
 
 /*
