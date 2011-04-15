@@ -174,6 +174,37 @@ unsigned long clk_parent_get_rate(struct clk *clk);
 long clk_parent_round_rate(struct clk *clk, unsigned long rate);
 int clk_parent_set_rate(struct clk *clk, unsigned long rate);
 
+/**
+ * struct clk_divider - clock divider
+ *
+ * @clk		clock source
+ * @reg		register containing the divider
+ * @shift	shift to the divider
+ * @width	width of the divider
+ * @lock	register lock
+ * @parent	parent clock
+ *
+ * This clock implements get_rate/set_rate/round_rate. prepare/unprepare and
+ * enable/disable are passed through to the parent.
+ *
+ * The divider is calculated as div = reg_val + 1
+ * or if CLK_DIVIDER_FLAG_ONE_BASED is set as div = reg_val
+ * (with reg_val == 0 considered invalid)
+ */
+struct clk_divider {
+	struct clk	clk;
+	void __iomem	*reg;
+	unsigned char	shift;
+	unsigned char	width;
+	unsigned int	div;
+	struct clk	*parent;
+	spinlock_t	*lock;
+#define CLK_DIVIDER_FLAG_ONE_BASED	(1 << 0)
+	unsigned int	flags;
+};
+
+extern struct clk_ops clk_divider_ops;
+
 #else /* !CONFIG_USE_COMMON_STRUCT_CLK */
 
 /*

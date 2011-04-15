@@ -15,3 +15,6 @@ config USE_COMMON_STRUCT_CLK
 config CLK_DEBUG
 	bool "Export clock debug information through debugfs"
 	depends on USE_COMMON_STRUCT_CLK && PM_DEBUG &&DEBUG_FS
+
+config USE_COMMON_CLK_DIVIDER
+	bool
