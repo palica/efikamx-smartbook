@@ -86,5 +86,32 @@ extern spinlock_t imx_ccm_lock;
 		.lock = &imx_ccm_lock, \
 	}
 
+/**
+ * clock group
+ *
+ * @clk		clock source
+ * @num_clks	number of parent clocks to enable
+ * @clks	array of parents to enable/disable
+ *
+ * This clock is a groups of clocks useful for specifying clocks for
+ * drivers which consist of multiple clocks. it enables/disables
+ * all clocks in @clks, clk_get_rate/clk_set_rate are passed through
+ * to the first member of @clks.
+ */
+struct clk_group {
+	struct clk	clk;
+	unsigned char	num_clks;
+	struct clk	**clks;
+};
+
+extern struct clk_ops clk_group_ops;
+
+#define DEFINE_CLK_GROUP(name, _clks) \
+	struct clk_group name = { \
+		.clk = INIT_CLK(name.clk, clk_group_ops), \
+		.clks = (_clks), \
+		.num_clks = ARRAY_SIZE(_clks), \
+	}
+
 #endif /* __ASSEMBLY__ */
 #endif /* __ASM_ARCH_MXC_CLOCK_H__ */
