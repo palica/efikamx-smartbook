@@ -78,7 +78,7 @@ err_out:
 	return err;
 }
 
-#define NR_PREINIT_CLKS	16
+#define NR_PREINIT_CLKS	160
 
 static struct clk *preinit_clks[NR_PREINIT_CLKS];
 static int n_preinit_clks;
