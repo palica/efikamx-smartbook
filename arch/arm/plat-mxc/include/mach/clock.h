@@ -62,5 +62,29 @@ void clk_unregister(struct clk *clk);
 
 unsigned long mxc_decode_pll(unsigned int pll, u32 f_ref);
 
+extern spinlock_t imx_ccm_lock;
+
+#define DEFINE_CLK_DIVIDER(name, _parent, _reg, _shift, _width) \
+	struct clk_divider name = { \
+		.clk = INIT_CLK(name.clk, clk_divider_ops), \
+		.parent = (_parent), \
+		.reg = (_reg), \
+		.shift = (_shift), \
+		.width = (_width), \
+		.lock = &imx_ccm_lock, \
+		.flags = CLK_DIVIDER_RATE_PROPAGATES, \
+	}
+
+#define DEFINE_CLK_MUX(name, _reg, _shift, _width, _clks) \
+	struct clk_mux name = { \
+		.clk = INIT_CLK(name.clk, clk_mux_ops), \
+		.reg = (_reg), \
+		.shift = (_shift), \
+		.width = (_width), \
+		.clks = (_clks), \
+		.num_clks = ARRAY_SIZE(_clks), \
+		.lock = &imx_ccm_lock, \
+	}
+
 #endif /* __ASSEMBLY__ */
 #endif /* __ASM_ARCH_MXC_CLOCK_H__ */
