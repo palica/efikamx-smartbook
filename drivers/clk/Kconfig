@@ -21,3 +21,6 @@ config USE_COMMON_CLK_DIVIDER
 
 config USE_COMMON_CLK_FACTOR_FIXED
 	bool
+
+config USE_COMMON_CLK_MUX
+	bool

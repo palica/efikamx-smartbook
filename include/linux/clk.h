@@ -236,6 +236,34 @@ extern struct clk_ops clk_fixed_factor_ops;
 		.div = (_div), \
 	}
 
+/**
+ * struct clk_mux - clock multiplexer
+ *
+ * @clk		clock source
+ * @reg		the register this multiplexer can be configured with
+ * @shift	the shift to the start bit of this multiplexer
+ * @width	the width in bits of this multiplexer
+ * @num_clks	number of parent clocks
+ * @lock	register lock
+ * @clks	array of possible parents for this multiplexer. Can contain
+ *		holes with NULL in it for invalid register settings
+ *
+ * This clock implements get_parent/set_parent. prepare/unprepare,
+ * enable/disable and get_rate operations are passed through to the parent,
+ * the rate is not adjustable.
+ */
+struct clk_mux {
+	struct clk	clk;
+	void __iomem	*reg;
+	unsigned char	shift;
+	unsigned char	width;
+	unsigned char	num_clks;
+	spinlock_t	*lock;
+	struct clk	**clks;
+};
+
+extern struct clk_ops clk_mux_ops;
+
 #else /* !CONFIG_USE_COMMON_STRUCT_CLK */
 
 /*
