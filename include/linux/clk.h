@@ -264,6 +264,37 @@ struct clk_mux {
 
 extern struct clk_ops clk_mux_ops;
 
+/**
+ * struct clk_gate - clock gate
+ *
+ * @clk		clock source
+ * @reg		register containing the gate
+ * @reg1	another reg for gates using set/clear registers
+ * @shift	shift to the gate
+ * @parent	parent clock
+ * @flags	flags
+ *
+ * This clock implements clk_enable/clk_disable. The rate functions are passed
+ * through to the parent.
+ */
+struct clk_gate {
+	struct clk	clk;
+	void __iomem	*reg;
+	void __iomem	*reg1;
+	unsigned	shift;
+	struct clk	*parent;
+	spinlock_t	*lock;
+	void		(*enable)(struct clk_gate *);
+	void		(*disable)(struct clk_gate *);
+};
+
+void clk_gate_bit_set(struct clk_gate *gate);
+void clk_gate_bit_clear(struct clk_gate *gate);
+void clk_gate_enable_set(struct clk_gate *gate);
+void clk_gate_disable_set(struct clk_gate *gate);
+
+extern struct clk_ops clk_gate_ops;
+
 #else /* !CONFIG_USE_COMMON_STRUCT_CLK */
 
 /*

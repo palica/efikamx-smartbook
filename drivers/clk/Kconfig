@@ -24,3 +24,6 @@ config USE_COMMON_CLK_FACTOR_FIXED
 
 config USE_COMMON_CLK_MUX
 	bool
+
+config USE_COMMON_CLK_GATE
+	bool
