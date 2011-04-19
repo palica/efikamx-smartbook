@@ -18,3 +18,6 @@ config CLK_DEBUG
 
 config USE_COMMON_CLK_DIVIDER
 	bool
+
+config USE_COMMON_CLK_FACTOR_FIXED
+	bool

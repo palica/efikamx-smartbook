@@ -200,10 +200,41 @@ struct clk_divider {
 	struct clk	*parent;
 	spinlock_t	*lock;
 #define CLK_DIVIDER_FLAG_ONE_BASED	(1 << 0)
+#define CLK_DIVIDER_RATE_PROPAGATES	(1 << 1)
 	unsigned int	flags;
 };
 
 extern struct clk_ops clk_divider_ops;
+
+/**
+ * struct clk_fixed_factor - fixed factor between input and output
+ *
+ * @clk		clock source
+ * @mult	fixed multiplier value
+ * @div		fixed divider value
+ * @parent	parent clock
+ *
+ * This clock implements a fixed divider with an additional multiplier to
+ * specify fractional values. clk_enable/clk_disable are passed through
+ * to the parent. Note that the divider is applied before the multiplier
+ * to prevent overflows. This may result in a less accurat result.
+ */
+struct clk_fixed_factor {
+	struct clk	clk;
+	unsigned int	mult;
+	unsigned int	div;
+	struct clk	*parent;
+};
+
+extern struct clk_ops clk_fixed_factor_ops;
+
+#define DEFINE_CLK_FIXED_FACTOR(name, _parent, _mult, _div) \
+	struct clk_fixed_factor name = { \
+		.clk = INIT_CLK(name.clk, clk_fixed_factor_ops), \
+		.parent = (_parent), \
+		.mult = (_mult), \
+		.div = (_div), \
+	}
 
 #else /* !CONFIG_USE_COMMON_STRUCT_CLK */
 
