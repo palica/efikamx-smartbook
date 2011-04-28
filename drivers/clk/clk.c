@@ -56,7 +56,7 @@ int clk_enable(struct clk *clk)
 	if (!clk)
 		return 0;
 
-	WARN_ON(clk->prepare_count == 0);
+//	WARN_ON(clk->prepare_count == 0);
 
 	spin_lock_irqsave(&clk->enable_lock, flags);
 	if (clk->enable_count == 0 && clk->ops->enable)
