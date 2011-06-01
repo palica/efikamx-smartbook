@@ -1069,6 +1069,14 @@ config VIDEO_SH_MOBILE_CEU
 config VIDEO_IMX_IPU_COMMON
 	tristate
 
+config VIDEO_IMX_IPU_OVL
+	tristate "i.MX51/53 IPUv3 based overlay driver"
+	depends on VIDEO_DEV && DRM_IMX_IPUV3
+	select VIDEOBUF2_DMA_CONTIG
+	select VIDEO_IMX_IPU_COMMON
+	---help---
+	  This is a v4l2 overlay video driver for the i.MX51/53.
+
 config VIDEO_OMAP1
 	tristate "OMAP1 Camera Interface driver"
 	depends on VIDEO_DEV && ARCH_OMAP1 && SOC_CAMERA
