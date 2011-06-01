@@ -9,3 +9,6 @@ config DRM_IMX_LCDC
 	help
 	  Choose this if you have a i.MX1, i.MX21, i.MX25 or i.MX27 processor.
 
+config DRM_IMX_IPUV3_CORE
+	tristate "IPUv3 core support"
+	depends on DRM && ARCH_MXC
