@@ -166,6 +166,27 @@ int ipu_dp_set_window_pos(struct ipu_dp *, u16 x_pos, u16 y_pos);
 int ipu_dp_set_global_alpha(struct ipu_dp *dp, bool enable, u8 alpha,
 		bool bg_chan);
 
+/*
+ * IPU CSI functions
+ */
+enum {
+	IPU_CSI_CLK_MODE_GATED_CLK,
+	IPU_CSI_CLK_MODE_NONGATED_CLK,
+	IPU_CSI_CLK_MODE_CCIR656_PROGRESSIVE,
+	IPU_CSI_CLK_MODE_CCIR656_INTERLACED,
+	IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_DDR,
+	IPU_CSI_CLK_MODE_CCIR1120_PROGRESSIVE_SDR,
+	IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_DDR,
+	IPU_CSI_CLK_MODE_CCIR1120_INTERLACED_SDR,
+};
+
+int ipu_csi_init_interface(uint16_t width, uint16_t height, uint32_t pixel_fmt,
+	u32 cfg_param);
+
+int _ipu_csi_init(int channel, int csi, int burstsize, int mipi_id);
+void ipu_csi_set_window_size(uint32_t width, uint32_t height, uint32_t csi);
+void ipu_csi_set_window_pos(uint32_t left, uint32_t top, uint32_t csi);
+
 #define IPU_CPMEM_WORD(word, ofs, size) ((((word) * 160 + (ofs)) << 8) | (size))
 
 #define IPU_FIELD_UBO		IPU_CPMEM_WORD(0, 46, 22)
