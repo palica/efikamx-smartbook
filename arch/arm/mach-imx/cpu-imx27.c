@@ -72,3 +72,12 @@ int mx27_revision(void)
 	return mx27_cpu_rev;
 }
 EXPORT_SYMBOL(mx27_revision);
+
+#include <mach/devices-common.h>
+static int __init mx27_vpu_register(void)
+{
+	if (cpu_is_mx27())
+		mx27_add_mxc_vpu();
+	return 0;
+}
+late_initcall(mx27_vpu_register);

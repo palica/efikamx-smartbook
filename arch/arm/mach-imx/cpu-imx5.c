@@ -185,3 +185,15 @@ static int __init post_cpu_init(void)
 }
 
 postcore_initcall(post_cpu_init);
+
+#include <mach/devices-common.h>
+static int __init mx5_vpu_register(void)
+{
+	if (cpu_is_mx51())
+		mx51_add_mxc_vpu();
+	if (cpu_is_mx53())
+		mx53_add_mxc_vpu();
+
+	return 0;
+}
+late_initcall(mx5_vpu_register);
