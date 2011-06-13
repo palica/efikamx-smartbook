@@ -326,4 +326,7 @@ static inline void ipu_cpmem_set_burstsize(struct ipu_ch_param *p, int burstsize
 	ipu_ch_param_set_field(p, IPU_FIELD_NPB, burstsize - 1);
 };
 
+int ipu_image_convert(struct ipu_soc *ipu, struct ipu_image *in, struct ipu_image *out,
+		void (*complete)(void *ctx, int err), void *ctx);
+
 #endif
