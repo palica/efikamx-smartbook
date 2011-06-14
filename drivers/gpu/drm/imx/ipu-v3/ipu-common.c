@@ -670,8 +670,16 @@ static int ipu_submodules_init(struct ipu_soc *ipu, struct platform_device *pdev
 		goto err_dp;
 	}
 
+	ret = ipu_ic_init(ipu, dev, ipu_base + IPU_IC_REG_BASE, ipu_base + IPU_TPM_REG_BASE);
+	if (ret) {
+		unit = "ic";
+		goto err_ic;
+	}
+
 	return 0;
 
+err_ic:
+	ipu_dp_exit(ipu);
 err_dp:
 	ipu_dmfc_exit(ipu);
 err_dmfc:
@@ -795,6 +803,7 @@ static void ipu_submodules_exit(struct ipu_soc *ipu)
 	ipu_dc_exit(ipu);
 	ipu_di_exit(ipu, 1);
 	ipu_di_exit(ipu, 0);
+	ipu_ic_exit(ipu);
 }
 
 static int platform_remove_devices_fn(struct device *dev, void *unused)
@@ -836,7 +845,9 @@ static int ipu_add_client_devices(struct ipu_soc *ipu)
 {
 	int ret;
 
-	ret = ipu_add_subdevice_pdata(ipu->dev, "imx-ipuv3-ovl", 0, NULL,
+	ret = ipu_add_subdevice_pdata(ipu->dev, "imx-ipuv3-scaler", 0, NULL,
+			ipu->irq_start + IPU_IRQ_EOF(IPUV3_CHANNEL_MEM_FG_SYNC), 0);
+	ret |= ipu_add_subdevice_pdata(ipu->dev, "imx-ipuv3-ovl", 0, NULL,
 			ipu->irq_start + IPU_IRQ_EOF(IPUV3_CHANNEL_MEM_FG_SYNC), 0);
 	ret |= ipu_add_subdevice_pdata(ipu->dev, "imx-ipuv3-camera", 0, NULL,
 			ipu->irq_start + IPU_IRQ_EOF(IPUV3_CHANNEL_CSI0), 0);
@@ -976,15 +987,15 @@ static int __devinit ipu_probe(struct platform_device *pdev)
 
 	ipu_reset(ipu);
 
-	ret = ipu_submodules_init(ipu, pdev, ipu_base, ipu->clk);
-	if (ret)
-		goto failed_submodules_init;
-
 	/* Set sync refresh channels as high priority */
 	ipu_idmac_write(ipu, 0x18800000, IDMAC_CHA_PRI(0));
 
 	/* Set MCU_T to divide MCU access window into 2 */
 	ipu_cm_write(ipu, 0x00400000L | (IPU_MCU_T_DEFAULT << 18), IPU_DISP_GEN);
+
+	ret = ipu_submodules_init(ipu, pdev, ipu_base, ipu->clk);
+	if (ret)
+		goto failed_submodules_init;
 
 	ret = ipu_add_client_devices(ipu);
 	if (ret) {
