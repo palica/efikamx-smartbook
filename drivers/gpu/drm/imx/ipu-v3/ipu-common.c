@@ -670,6 +670,13 @@ static int ipu_submodules_init(struct ipu_soc *ipu, struct platform_device *pdev
 		goto err_dp;
 	}
 
+	ret = ipu_capture_init(ipu, dev, ipu_base + IPU_CSI0_REG_BASE,
+		ipu_base + IPU_CSI1_REG_BASE, ipu_base + IPU_SMFC_REG_BASE);
+	if (ret) {
+		unit = "capture";
+		goto err_capture;
+	}
+
 	ret = ipu_ic_init(ipu, dev, ipu_base + IPU_IC_REG_BASE, ipu_base + IPU_TPM_REG_BASE);
 	if (ret) {
 		unit = "ic";
@@ -679,6 +686,8 @@ static int ipu_submodules_init(struct ipu_soc *ipu, struct platform_device *pdev
 	return 0;
 
 err_ic:
+	ipu_ic_exit(ipu);
+err_capture:
 	ipu_dp_exit(ipu);
 err_dp:
 	ipu_dmfc_exit(ipu);
@@ -804,6 +813,7 @@ static void ipu_submodules_exit(struct ipu_soc *ipu)
 	ipu_di_exit(ipu, 1);
 	ipu_di_exit(ipu, 0);
 	ipu_ic_exit(ipu);
+	ipu_capture_exit(ipu);
 }
 
 static int platform_remove_devices_fn(struct device *dev, void *unused)
