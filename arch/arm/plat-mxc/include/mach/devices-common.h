@@ -183,7 +183,7 @@ struct platform_device *__init imx_add_imx_udc(
 		const struct imx_imx_udc_data *data,
 		const struct imxusb_platform_data *pdata);
 
-#include <mach/ipu.h>
+struct ipu_platform_data;
 #include <mach/mx3fb.h>
 #include <mach/mx3_camera.h>
 struct imx_ipu_core_data {
