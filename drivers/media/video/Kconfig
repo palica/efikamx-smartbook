@@ -1092,6 +1092,14 @@ config VIDEO_OMAP2
 	---help---
 	  This is a v4l2 driver for the TI OMAP2 camera capture interface
 
+config VIDEO_IMX_IPU_SCALER
+	tristate "i.MX51/53 IPUv3 based image scaler driver"
+	depends on VIDEO_DEV && DRM_IMX_IPUV3
+	select VIDEOBUF2_DMA_CONTIG
+	select VIDEO_IMX_IPU_COMMON
+	---help---
+	  This is a v4l2 scaler video driver for the i.MX51/53.
+
 config VIDEO_MX2_HOSTSUPPORT
 	bool
 
