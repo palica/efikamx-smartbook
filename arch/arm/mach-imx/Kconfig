@@ -93,6 +93,7 @@ config SOC_IMX5
 	select ARCH_MXC_AUDMUX_V2
 	select IMX_HAVE_PLATFORM_IMX_VPU
 	select ARCH_HAS_CPUFREQ
+	select IRAM_ALLOC
 	select ARCH_MX5
 	bool
 

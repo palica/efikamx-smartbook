@@ -17,6 +17,7 @@
 #include <linux/module.h>
 #include <mach/hardware.h>
 #include <linux/io.h>
+#include <mach/iram.h>
 
 static int mx5_cpu_rev = -1;
 
@@ -155,6 +156,9 @@ static int __init post_cpu_init(void)
 	unsigned int reg;
 	void __iomem *base;
 
+	if (cpu_is_mx51())
+		ipu_mipi_setup();
+
 	if (cpu_is_mx51() || cpu_is_mx53()) {
 		if (cpu_is_mx51())
 			base = MX51_IO_ADDRESS(MX51_AIPS1_BASE_ADDR);
@@ -180,6 +184,11 @@ static int __init post_cpu_init(void)
 		reg = __raw_readl(base + 0x50) & 0x00FFFFFF;
 		__raw_writel(reg, base + 0x50);
 	}
+
+	if (cpu_is_mx53())
+		iram_init(MX53_IRAM_BASE_ADDR, MX53_IRAM_SIZE);
+	if (cpu_is_mx51())
+		iram_init(MX51_IRAM_BASE_ADDR, MX51_IRAM_SIZE);
 
 	return 0;
 }
