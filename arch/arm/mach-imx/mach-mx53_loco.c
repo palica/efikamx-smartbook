@@ -43,6 +43,7 @@
 #define LOCO_SD3_WP			IMX_GPIO_NR(3, 12)
 #define LOCO_SD1_CD			IMX_GPIO_NR(3, 13)
 #define LOCO_ACCEL_EN			IMX_GPIO_NR(6, 14)
+#define MX53_LOCO_USB_PWREN		IMX_GPIO_NR(7, 8)
 
 static iomux_v3_cfg_t mx53_loco_pads[] = {
 	/* FEC */
@@ -192,6 +193,50 @@ static iomux_v3_cfg_t mx53_loco_pads[] = {
 	MX53_PAD_GPIO_8__GPIO1_8,
 };
 
+static const struct mxc_usbh_platform_data dr_utmi_config __initconst = {
+	.portsc	= MXC_EHCI_MODE_UTMI,
+};
+
+static const struct fsl_usb2_platform_data usb_pdata __initconst = {
+	.operating_mode	= FSL_USB2_DR_DEVICE,
+	.phy_mode	= FSL_USB2_PHY_UTMI_WIDE,
+};
+
+static const struct mxc_usbh_platform_data usbh1_config __initconst = {
+	.portsc	= MXC_EHCI_MODE_UTMI,
+};
+
+static int otg_mode_host;
+
+static int __init mx53_loco_otg_mode(char *options)
+{
+	if (!strcmp(options, "host"))
+		otg_mode_host = 1;
+	else if (!strcmp(options, "device"))
+		otg_mode_host = 0;
+	else
+		pr_info("otg_mode neither \"host\" nor \"device\". "
+			"Defaulting to device\n");
+	return 0;
+}
+__setup("otg_mode=", mx53_loco_otg_mode);
+
+static void mx53_loco_add_usb(void)
+{
+	/* USB PWR enable */
+	gpio_request(MX53_LOCO_USB_PWREN, "usb-pwr");
+	gpio_direction_output(MX53_LOCO_USB_PWREN, 0);
+	gpio_set_value(MX53_LOCO_USB_PWREN, 1);
+
+	if (otg_mode_host)
+		imx53_add_mxc_ehci_otg(&dr_utmi_config);
+	else {
+		imx53_add_fsl_usb2_udc(&usb_pdata);
+	}
+
+	imx53_add_mxc_ehci_hs(1, &usbh1_config);
+}
+
 #define GPIO_BUTTON(gpio_num, ev_code, act_low, descr, wake)	\
 {								\
 	.gpio		= gpio_num,				\
@@ -283,6 +328,7 @@ static void __init mx53_loco_board_init(void)
 	imx53_add_imx_uart(0, NULL);
 	mx53_loco_fec_reset();
 	imx53_add_fec(&mx53_loco_fec_data);
+	mx53_loco_add_usb();
 	imx53_add_imx2_wdt(0, NULL);
 
 	ret = gpio_request_one(LOCO_ACCEL_EN, GPIOF_OUT_INIT_HIGH, "accel_en");
