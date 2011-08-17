@@ -12,6 +12,10 @@ extern const struct imx_fec_data imx53_fec_data;
 #define imx53_add_fec(pdata)   \
 	imx_add_fec(&imx53_fec_data, pdata)
 
+extern const struct imx_fsl_usb2_udc_data imx53_fsl_usb2_udc_data;
+#define imx53_add_fsl_usb2_udc(pdata)	\
+	imx_add_fsl_usb2_udc(&imx53_fsl_usb2_udc_data, pdata)
+
 extern const struct imx_imx_uart_1irq_data imx53_imx_uart_data[];
 #define imx53_add_imx_uart(id, pdata)	\
 	imx_add_imx_uart_1irq(&imx53_imx_uart_data[id], pdata)
@@ -24,6 +28,13 @@ extern const struct imx_imx_i2c_data imx53_imx_i2c_data[];
 extern const struct imx_sdhci_esdhc_imx_data imx53_sdhci_esdhc_imx_data[];
 #define imx53_add_sdhci_esdhc_imx(id, pdata)	\
 	imx_add_sdhci_esdhc_imx(&imx53_sdhci_esdhc_imx_data[id], pdata)
+
+extern const struct imx_mxc_ehci_data imx53_mxc_ehci_otg_data;
+#define imx53_add_mxc_ehci_otg(pdata)	\
+	imx_add_mxc_ehci(&imx53_mxc_ehci_otg_data, pdata)
+extern const struct imx_mxc_ehci_data imx53_mxc_ehci_hs_data[];
+#define imx53_add_mxc_ehci_hs(id, pdata)	\
+	imx_add_mxc_ehci(&imx53_mxc_ehci_hs_data[id - 1], pdata)
 
 extern const struct imx_spi_imx_data imx53_ecspi_data[];
 #define imx53_add_ecspi(id, pdata)	\
