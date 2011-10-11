@@ -253,9 +253,9 @@ static int mx5_videobuf_start_streaming(struct vb2_queue *vq, unsigned int count
 	int ret;
 	int xres = icd->user_width, yres = icd->user_height;
 	struct ipu_ch_param *cpmem = ipu_get_cpmem(mx5_cam->ipuch);
-	struct device *dev = icd->dev.parent;
 	struct device *dev = icd->parent;
 	u32 csipixfmt = V4L2_PIX_FMT_UYVY;
+	int yuv_passthrough = 0;
 
 	memset(cpmem, 0, sizeof(*cpmem));
 
@@ -266,13 +266,21 @@ static int mx5_videobuf_start_streaming(struct vb2_queue *vq, unsigned int count
 
 	dev_info(dev, "width: %d height: %d\n", icd->user_width, icd->user_height);
 
-	ipu_cpmem_set_resolution(cpmem, xres, yres);
+	if (machine_is_mx53_pf1()) {
+		csipixfmt = IPUV3_PIX_FMT_GENERIC;
+		yuv_passthrough = 1;
+	}
+
+	ipu_cpmem_set_resolution(cpmem, xres / (yuv_passthrough + 1), yres);
 
 	switch (mx5_cam->fourcc) {
 	case V4L2_PIX_FMT_UYVY:
 		dev_info(dev, "IPU_PIX_FMT_UYVY\n");
 		ipu_cpmem_set_stride(cpmem, xres * 2);
-		ipu_cpmem_set_yuv_interleaved(cpmem, V4L2_PIX_FMT_UYVY);
+		if (yuv_passthrough)
+			ipu_cpmem_set_format_passthrough(cpmem, 32);
+		else
+			ipu_cpmem_set_yuv_interleaved(cpmem, V4L2_PIX_FMT_UYVY);
 		break;
 	case V4L2_PIX_FMT_YUV420:
 		dev_info(dev, "V4L2_PIX_FMT_YUV420\n");
