@@ -25,6 +25,10 @@ extern const struct imx_sdhci_esdhc_imx_data imx53_sdhci_esdhc_imx_data[];
 #define imx53_add_sdhci_esdhc_imx(id, pdata)	\
 	imx_add_sdhci_esdhc_imx(&imx53_sdhci_esdhc_imx_data[id], pdata)
 
+extern const struct imx_mxc_nand_data imx53_mxc_nand_data;
+#define imx53_add_mxc_nand(pdata)	\
+	imx_add_mxc_nand(&imx53_mxc_nand_data, pdata)
+
 extern const struct imx_spi_imx_data imx53_ecspi_data[];
 #define imx53_add_ecspi(id, pdata)	\
 	imx_add_spi_imx(&imx53_ecspi_data[id], pdata)
