@@ -193,6 +193,11 @@ static int __init post_cpu_init(void)
 	unsigned int reg;
 	void __iomem *base;
 
+	/* hard reset the IPU */
+	reg = readl(MX51_IO_ADDRESS(MX51_SRC_BASE_ADDR));
+	reg |= 1 << 3;
+	writel(reg, MX51_IO_ADDRESS(MX51_SRC_BASE_ADDR));
+
 	if (cpu_is_mx51())
 		ipu_mipi_setup();
 
