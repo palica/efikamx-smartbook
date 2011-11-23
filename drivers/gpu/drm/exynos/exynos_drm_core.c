@@ -159,22 +159,6 @@ int exynos_drm_device_unregister(struct drm_device *dev)
 }
 EXPORT_SYMBOL_GPL(exynos_drm_device_unregister);
 
-static int exynos_drm_mode_group_reinit(struct drm_device *dev)
-{
-	struct drm_mode_group *group = &dev->primary->mode_group;
-	uint32_t *id_list = group->id_list;
-	int ret;
-
-	DRM_DEBUG_DRIVER("%s\n", __FILE__);
-
-	ret = drm_mode_group_init_legacy_group(dev, group);
-	if (ret < 0)
-		return ret;
-
-	kfree(id_list);
-	return 0;
-}
-
 int exynos_drm_subdrv_register(struct exynos_drm_subdrv *subdrv)
 {
 	int err;
@@ -201,15 +185,6 @@ int exynos_drm_subdrv_register(struct exynos_drm_subdrv *subdrv)
 		err = exynos_drm_fbdev_reinit(drm_dev);
 		if (err) {
 			DRM_ERROR("failed to reinitialize exynos drm fbdev\n");
-			exynos_drm_subdrv_remove(drm_dev, subdrv);
-			mutex_unlock(&exynos_drm_mutex);
-			return err;
-		}
-
-		err = exynos_drm_mode_group_reinit(drm_dev);
-		if (err) {
-			DRM_ERROR("failed to reinitialize mode group\n");
-			exynos_drm_fbdev_fini(drm_dev);
 			exynos_drm_subdrv_remove(drm_dev, subdrv);
 			mutex_unlock(&exynos_drm_mutex);
 			return err;
@@ -249,12 +224,6 @@ int exynos_drm_subdrv_unregister(struct exynos_drm_subdrv *subdrv)
 		ret = exynos_drm_fbdev_reinit(drm_dev);
 		if (ret < 0) {
 			DRM_ERROR("failed fb helper reinit.\n");
-			goto fail;
-		}
-
-		ret = exynos_drm_mode_group_reinit(drm_dev);
-		if (ret < 0) {
-			DRM_ERROR("failed drm mode group reinit.\n");
 			goto fail;
 		}
 	}

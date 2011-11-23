@@ -692,28 +692,6 @@ struct drm_mode_config_funcs {
 };
 
 /**
- * drm_mode_group - group of mode setting resources for potential sub-grouping
- * @num_crtcs: CRTC count
- * @num_encoders: encoder count
- * @num_connectors: connector count
- * @id_list: list of KMS object IDs in this group
- *
- * Currently this simply tracks the global mode setting state.  But in the
- * future it could allow groups of objects to be set aside into independent
- * control groups for use by different user level processes (e.g. two X servers
- * running simultaneously on different heads, each with their own mode
- * configuration and freedom of mode setting).
- */
-struct drm_mode_group {
-	uint32_t num_crtcs;
-	uint32_t num_encoders;
-	uint32_t num_connectors;
-
-	/* list of object IDs for this group */
-	uint32_t *id_list;
-};
-
-/**
  * drm_mode_config - Mode configuration control structure
  * @mutex: mutex protecting KMS related lists and structures
  * @idr_mutex: mutex for KMS ID allocation and management
@@ -842,7 +820,7 @@ extern char *drm_get_dvi_i_select_name(int val);
 extern char *drm_get_tv_subconnector_name(int val);
 extern char *drm_get_tv_select_name(int val);
 extern void drm_fb_release(struct drm_file *file_priv);
-extern int drm_mode_group_init_legacy_group(struct drm_device *dev, struct drm_mode_group *group);
+#define HAVE_MODEGROUP_REMOVED
 extern struct edid *drm_get_edid(struct drm_connector *connector,
 				 struct i2c_adapter *adapter);
 extern int drm_add_edid_modes(struct drm_connector *connector, struct edid *edid);

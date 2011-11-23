@@ -359,14 +359,6 @@ int drm_get_pci_dev(struct pci_dev *pdev, const struct pci_device_id *ent,
 			goto err_g4;
 	}
 
-	/* setup the grouping for the legacy output */
-	if (drm_core_check_feature(dev, DRIVER_MODESET)) {
-		ret = drm_mode_group_init_legacy_group(dev,
-						&dev->primary->mode_group);
-		if (ret)
-			goto err_g4;
-	}
-
 	list_add_tail(&dev->driver_item, &driver->device_list);
 
 	DRM_INFO("Initialized %s %d.%d.%d %s for %s on minor %d\n",
