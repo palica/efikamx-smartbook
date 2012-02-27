@@ -59,6 +59,8 @@ static struct map_desc imx27_io_desc[] __initdata = {
  */
 void __init mx27_map_io(void)
 {
+	init_consistent_dma_size(SZ_8M);
+
 	iotable_init(imx27_io_desc, ARRAY_SIZE(imx27_io_desc));
 }
 
