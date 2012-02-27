@@ -39,4 +39,5 @@ obj-$(CONFIG_DRM_NOUVEAU) +=nouveau/
 obj-$(CONFIG_DRM_EXYNOS) +=exynos/
 obj-$(CONFIG_DRM_GMA500) += gma500/
 obj-$(CONFIG_DRM_SDRM) += sdrm/
+obj-$(CONFIG_DRM_IMX) +=imx/
 obj-y			+= i2c/

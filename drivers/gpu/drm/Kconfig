@@ -175,3 +175,5 @@ source "drivers/gpu/drm/gma500/Kconfig"
 
 source "drivers/gpu/drm/sdrm/Kconfig"
 
+source "drivers/gpu/drm/imx/Kconfig"
+

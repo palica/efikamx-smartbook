@@ -80,5 +80,11 @@ struct imx_fb_platform_data {
 	void (*backlight_power)(int);
 };
 
-void set_imx_fb_info(struct imx_fb_platform_data *);
+/* drm platform data */
+struct imx_drm_platform_data {
+	u32 lscr1;
+	u32 pcr;
+	u32 pwmr;
+};
+
 #endif /* ifndef __MACH_IMXFB_H__ */
