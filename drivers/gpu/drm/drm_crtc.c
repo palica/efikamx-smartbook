@@ -2996,6 +2996,11 @@ int drm_mode_gamma_set_ioctl(struct drm_device *dev,
 		goto out;
 	}
 
+	if (!crtc->funcs->gamma_set) {
+		ret = -ENOSYS;
+		goto out;
+	}
+
 	crtc->funcs->gamma_set(crtc, r_base, g_base, b_base, 0, crtc->gamma_size);
 
 out:
