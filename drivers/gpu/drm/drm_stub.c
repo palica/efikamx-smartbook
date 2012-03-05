@@ -319,7 +319,7 @@ int drm_fill_in_dev(struct drm_device *dev,
 	drm_lastclose(dev);
 	return retcode;
 }
-
+EXPORT_SYMBOL_GPL(drm_fill_in_dev);
 
 /**
  * Get a secondary minor number.
@@ -397,6 +397,7 @@ err_idr:
 	*minor = NULL;
 	return ret;
 }
+EXPORT_SYMBOL_GPL(drm_get_minor);
 
 /**
  * Put a secondary minor number.
@@ -428,6 +429,7 @@ int drm_put_minor(struct drm_minor **minor_p)
 	*minor_p = NULL;
 	return 0;
 }
+EXPORT_SYMBOL_GPL(drm_put_minor);
 
 /**
  * Called via drm_exit() at module unload time or when pci device is
