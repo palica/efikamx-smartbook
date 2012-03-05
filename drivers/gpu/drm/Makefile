@@ -19,6 +19,7 @@ drm-$(CONFIG_COMPAT) += drm_ioc32.o
 drm_kms_helper-y := drm_fb_helper.o drm_crtc_helper.o drm_dp_i2c_helper.o
 
 obj-$(CONFIG_DRM_KMS_HELPER) += drm_kms_helper.o
+obj-$(CONFIG_DRM_KMS_ENCON) += sdrm_encon.o
 
 CFLAGS_drm_trace_points.o := -I$(src)
 
@@ -37,4 +38,5 @@ obj-$(CONFIG_DRM_VIA)	+=via/
 obj-$(CONFIG_DRM_NOUVEAU) +=nouveau/
 obj-$(CONFIG_DRM_EXYNOS) +=exynos/
 obj-$(CONFIG_DRM_GMA500) += gma500/
+obj-$(CONFIG_DRM_SDRM) += sdrm/
 obj-y			+= i2c/

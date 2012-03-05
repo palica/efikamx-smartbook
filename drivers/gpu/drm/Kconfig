@@ -9,6 +9,7 @@ menuconfig DRM
 	depends on (AGP || AGP=n) && !EMULATED_CMPXCHG && MMU
 	select I2C
 	select I2C_ALGOBIT
+	select DRM_KMS_HELPER
 	help
 	  Kernel-level support for the Direct Rendering Infrastructure (DRI)
 	  introduced in XFree86 4.0. If you say Y here, you need to select
@@ -26,6 +27,13 @@ config DRM_KMS_HELPER
 	select FRAMEBUFFER_CONSOLE_DETECT_PRIMARY if FRAMEBUFFER_CONSOLE
 	help
 	  FB and CRTC helpers for KMS drivers.
+
+config DRM_KMS_ENCON
+	tristate
+	depends on DRM
+	help
+	  helper for KMS drivers which use connectors and encoders with
+	  a 1:1 relationship
 
 config DRM_TTM
 	tristate
@@ -164,4 +172,6 @@ source "drivers/gpu/drm/exynos/Kconfig"
 source "drivers/gpu/drm/vmwgfx/Kconfig"
 
 source "drivers/gpu/drm/gma500/Kconfig"
+
+source "drivers/gpu/drm/sdrm/Kconfig"
 
