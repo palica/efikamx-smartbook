@@ -832,6 +832,13 @@ static struct clk iim_clk = {
 	.enable_shift = MXC_CCM_CCGRx_CG15_OFFSET,
 };
 
+static struct clk srtc_clk = {
+	.parent = &ckil_clk,
+	.secondary = &ipg_clk,
+	.enable_reg = MXC_CCM_CCGR4,
+	.enable_shift = MXC_CCM_CCGRx_CG14_OFFSET,
+};
+
 /* Main IP interface clock for access to registers */
 static struct clk ipg_clk = {
 	.parent = &ahb_clk,
@@ -1459,6 +1466,7 @@ static struct clk_lookup mx51_lookups[] = {
 	_REGISTER_CLOCK("imx-i2c.0", NULL, i2c1_clk)
 	_REGISTER_CLOCK("imx-i2c.1", NULL, i2c2_clk)
 	_REGISTER_CLOCK("imx-i2c.2", NULL, hsi2c_clk)
+	_REGISTER_CLOCK("imx-srtc.0", NULL, srtc_clk)
 	_REGISTER_CLOCK("mxc-ehci.0", "usb", usboh3_clk)
 	_REGISTER_CLOCK("mxc-ehci.0", "usb_ahb", usb_ahb_clk)
 	_REGISTER_CLOCK("mxc-ehci.0", "usb_phy1", usb_phy1_clk)
@@ -1512,6 +1520,7 @@ static struct clk_lookup mx53_lookups[] = {
 	_REGISTER_CLOCK("imx-i2c.0", NULL, i2c1_clk)
 	_REGISTER_CLOCK("imx-i2c.1", NULL, i2c2_clk)
 	_REGISTER_CLOCK("imx-i2c.2", NULL, i2c3_mx53_clk)
+	_REGISTER_CLOCK("imx-srtc.0", NULL, srtc_clk)
 	/* i.mx53 has the i.mx51 type ecspi */
 	_REGISTER_CLOCK("imx51-ecspi.0", NULL, ecspi1_clk)
 	_REGISTER_CLOCK("imx51-ecspi.1", NULL, ecspi2_clk)
