@@ -98,6 +98,13 @@ struct imx_imxdi_rtc_data {
 struct platform_device *__init imx_add_imxdi_rtc(
 		const struct imx_imxdi_rtc_data *data);
 
+struct imx_srtc_data {
+	resource_size_t iobase;
+	resource_size_t irq;
+};
+struct platform_device *__init imx_add_srtc(
+		const struct imx_srtc_data *data);
+
 #include <mach/imxfb.h>
 struct imx_imx_fb_data {
 	resource_size_t iobase;
