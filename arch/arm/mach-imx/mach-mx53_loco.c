@@ -19,18 +19,31 @@
  */
 
 #include <linux/init.h>
+#include <linux/pwm_backlight.h>
 #include <linux/clk.h>
 #include <linux/delay.h>
 #include <linux/gpio.h>
 #include <linux/i2c.h>
+#include <drm/imx-ipu-v3.h>
+#include <drm/i2c/sii9022.h>
+#include <linux/mfd/da9052/pdata.h>
+
+#include <linux/regulator/machine.h>
 
 #include <mach/common.h>
 #include <mach/hardware.h>
 #include <mach/iomux-mx53.h>
+#include <mach/ipu-v3.h>
+#include <drm/drmP.h>
+#include "drm/sdrm_encon.h"
 
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/time.h>
+
+#include <mach/imx-ldb.h>
+
+#include "crm-regs-imx5.h"
 
 #include "devices-imx53.h"
 
@@ -43,6 +56,9 @@
 #define LOCO_SD3_WP			IMX_GPIO_NR(3, 12)
 #define LOCO_SD1_CD			IMX_GPIO_NR(3, 13)
 #define LOCO_ACCEL_EN			IMX_GPIO_NR(6, 14)
+#define MX53_LOCO_USB_PWREN		IMX_GPIO_NR(7, 8)
+#define MX53_LOCO_LCD_BL		IMX_GPIO_NR(7, 2)
+#define DA9052_INT			IMX_GPIO_NR(7, 11)
 
 static iomux_v3_cfg_t mx53_loco_pads[] = {
 	/* FEC */
@@ -257,10 +273,61 @@ static const struct gpio_led mx53loco_leds[] __initconst = {
 	},
 };
 
+#define DA9052_VIR_INT_BASE	MX53_INT_GPIO7_HIGH + 1
+
+static struct da9052_pdata da9052_pdata = {
+		.irq_base = DA9052_VIR_INT_BASE,
+};
+
+static struct i2c_board_info mx53loco_i2c_devices[] = {
+	{
+		I2C_BOARD_INFO("mma8450", 0x1C),
+	}, {
+		I2C_BOARD_INFO("da9052", 0x48),
+		.platform_data = &da9052_pdata,
+	},
+};
+
 static const struct gpio_led_platform_data mx53loco_leds_data __initconst = {
 	.leds		= mx53loco_leds,
 	.num_leds	= ARRAY_SIZE(mx53loco_leds),
 };
+
+static struct imx_ipuv3_platform_data ipu_data = {
+	.di[0] = {
+		.clk_ext = 0,
+	},
+};
+
+static struct platform_pwm_backlight_data mxc_pwm_backlight_data = {
+	.pwm_id = 1,
+	.max_brightness = 255,
+	.dft_brightness = 255,
+	.pwm_period_ns = 50000,
+};
+
+#define DISP0_POWER_EN		IMX_GPIO_NR(3, 24)
+#define DISP0_DET_INT		IMX_GPIO_NR(3, 31)
+#define DISP0_RESET		IMX_GPIO_NR(5, 0)
+
+#define DA9052_INT		IMX_GPIO_NR(7, 11)	//(6*32 + 11)	/* GPIO7_11 */
+#define DA9052_VIR_INT_BASE	MX53_INT_GPIO7_HIGH + 1
+
+
+static struct sii9022_platform_data sii9022_pdata = {
+	.drm_name = "imx-drm.0",
+	.encoder_id = 0,
+};
+
+static struct i2c_board_info loco_i2c1_info[] __initdata = {
+	{
+		.type = "sii9022",
+		.addr = 0x39,
+		.platform_data = &sii9022_pdata,
+	},
+};
+
+static int mx53_loco_hdmi_adapter = 1;
 
 void __init imx53_qsb_common_init(void)
 {
@@ -268,17 +335,25 @@ void __init imx53_qsb_common_init(void)
 					 ARRAY_SIZE(mx53_loco_pads));
 }
 
-static struct i2c_board_info mx53loco_i2c_devices[] = {
-	{
-		I2C_BOARD_INFO("mma8450", 0x1C),
-	},
-};
-
 static void __init mx53_loco_board_init(void)
 {
 	int ret;
 	imx53_soc_init();
 	imx53_qsb_common_init();
+
+	/* Sii9022 HDMI controller */
+	gpio_request(DISP0_RESET, "disp0-reset");
+	gpio_direction_output(DISP0_RESET, 0);
+	msleep(10);
+	gpio_set_value(DISP0_RESET, 1);
+
+	gpio_request(DISP0_DET_INT, "disp0-detect");
+	gpio_direction_input(DISP0_DET_INT);
+	gpio_free(DISP0_DET_INT);
+
+	/* LCD panel power enable */
+	gpio_request(DISP0_POWER_EN, "disp0-power-en");
+	gpio_direction_output(DISP0_POWER_EN, 1);
 
 	imx53_add_imx_uart(0, NULL);
 	mx53_loco_fec_reset();
@@ -289,12 +364,22 @@ static void __init mx53_loco_board_init(void)
 	if (ret)
 		pr_err("Cannot request ACCEL_EN pin: %d\n", ret);
 
+	mx53loco_i2c_devices[1].irq = gpio_to_irq(DA9052_INT);
 	i2c_register_board_info(0, mx53loco_i2c_devices,
 				ARRAY_SIZE(mx53loco_i2c_devices));
 	imx53_add_imx_i2c(0, &mx53_loco_i2c_data);
 	imx53_add_imx_i2c(1, &mx53_loco_i2c_data);
 	imx53_add_sdhci_esdhc_imx(0, &mx53_loco_sd1_data);
 	imx53_add_sdhci_esdhc_imx(2, &mx53_loco_sd3_data);
+
+	loco_i2c1_info[0].irq  = gpio_to_irq(DISP0_DET_INT);
+	i2c_register_board_info(1, loco_i2c1_info, ARRAY_SIZE(loco_i2c1_info));
+
+	if (mx53_loco_hdmi_adapter) {
+		i2c_register_board_info(1, loco_i2c1_info,
+				ARRAY_SIZE(loco_i2c1_info));
+	}
+
 	imx_add_gpio_keys(&loco_button_data);
 	gpio_led_register_device(-1, &mx53loco_leds_data);
 	imx53_add_ahci_imx();
@@ -309,8 +394,226 @@ static struct sys_timer mx53_loco_timer = {
 	.init	= mx53_loco_timer_init,
 };
 
+static void loco_add_bl_pwm(void)
+{
+	printk("FIXME: LOCO PWM\n");
+#if 0
+	imx53_add_mxc_pwm(1);
+
+	mxc_register_device(&mxc_pwm1_backlight_device,
+			&mxc_pwm_backlight_data);
+#endif
+}
+
+#define DISPLAY_HITACHI_800_480_NAME "hitachi-800x480"
+
+static void (*loco_display_init)(void);
+
+static struct drm_display_mode hitachi_800x480_mode[] = {
+	{
+		.name = DISPLAY_HITACHI_800_480_NAME,
+		.vrefresh = 60,
+		.clock = 33500,
+		.hdisplay = 800,
+		.hsync_start = 964,
+		.hsync_end = 974,
+		.htotal = 1063,
+		.vdisplay = 480,
+		.vsync_start = 490,
+		.vsync_end = 500,
+		.vtotal = 523,
+		.type = 0x0,
+		.flags = 0x0,
+	},
+	{}
+};
+
+static struct sdrm_encon_dummy_pdata hitachi_800x480_encon_data = {
+	.drm_name = "imx-drm.0",
+	.possible_crtcs = 0x1,
+	.possible_clones = 0x1,
+	.modes = hitachi_800x480_mode,
+	.num_modes = ARRAY_SIZE(hitachi_800x480_mode),
+//	.gpio_backlight = 133,
+//	.flags = DRM_ENCON_DUMMY_USE_BL_GPIO,
+};
+
+static void mx53_loco_init_hitachi_800x480(void)
+{
+	platform_device_register_data(NULL, "drm-encon-dummy", 0,
+                        &hitachi_800x480_encon_data,
+			sizeof(hitachi_800x480_encon_data));
+
+	ipu_data.di[0].clk_ext = 0;
+
+	loco_add_bl_pwm();
+}
+
+#define DISPLAY_HITACHI_800_480_LVDS_NAME "hitachi-800x480-lvds"
+
+static void (*loco_display_init)(void);
+
+static struct drm_display_mode hitachi_800x480_lvds_mode[] = {
+	{
+		.name = DISPLAY_HITACHI_800_480_LVDS_NAME,
+		.vrefresh = 60,
+		.clock = 33333,
+		.hdisplay = 800,
+		.hsync_start = 800,
+		.hsync_end = 1055,
+		.htotal = 1055,
+		.vdisplay = 480,
+		.vsync_start = 480,
+		.vsync_end = 525,
+		.vtotal = 525,
+		.type = 0x48,
+		.flags = 0x9,
+	},
+	{}
+};
+
+static struct sdrm_encon_dummy_pdata hitachi_800x480_lvds_encon_data = {
+	.drm_name = "imx-drm.0",
+	.possible_crtcs = 0x1,
+	.possible_clones = 0x1,
+	.modes = hitachi_800x480_lvds_mode,
+	.num_modes = ARRAY_SIZE(hitachi_800x480_lvds_mode),
+//	.gpio_backlight = 133,
+//	.flags = DRM_ENCON_DUMMY_USE_BL_GPIO,
+};
+
+#define LOCO_GPIO_DISP_BL	IMX_GPIO_NR(1, 1)
+
+static void mx53_loco_init_hitachi_800x480_lvds(void)
+{
+	iomux_v3_cfg_t gpio1_1 = MX53_PAD_GPIO_1__GPIO1_1;
+
+	mx53_clock_ldb_pll4(33333333 * 7);
+
+	mx53_setup_ldb(LDB_DI0_VS_POL_ACT_LOW | LDB_BIT_MAP_CH0_JEIDA |
+			LDB_CH0_MODE_EN_TO_DI0);
+
+	ipu_data.di[0].clk_ext = 1;
+	ipu_data.di[0].clk_sync = 1;
+
+	platform_device_register_data(NULL, "drm-encon-dummy", 0,
+                        &hitachi_800x480_lvds_encon_data,
+			sizeof(hitachi_800x480_lvds_encon_data));
+
+	mxc_iomux_v3_setup_pad(gpio1_1);
+
+	gpio_request(LOCO_GPIO_DISP_BL, "disp0-bl");
+	gpio_direction_output(LOCO_GPIO_DISP_BL, 0);
+}
+
+#define DISPLAY_CHIMEI_1280_800_NAME "chimei-1280x800"
+
+static struct drm_display_mode chimei_1280x800_mode[] = {
+	{
+		.name = DISPLAY_CHIMEI_1280_800_NAME,
+		.vrefresh = 60,
+		.clock = 71000,
+		.hdisplay = 1280,
+		.hsync_start = 1280,
+		.hsync_end = 1440,
+		.htotal = 1440,
+		.vdisplay = 800,
+		.vsync_start = 800,
+		.vsync_end = 823,
+		.vtotal = 823,
+		.type = 0x48,
+		.flags = 0x9,
+	},
+	{}
+};
+
+static struct sdrm_encon_dummy_pdata chimei_1280x800_encon_data = {
+	.drm_name = "imx-drm.0",
+	.possible_crtcs = 0x1,
+	.possible_clones = 0x1,
+	.modes = chimei_1280x800_mode,
+	.num_modes = ARRAY_SIZE(chimei_1280x800_mode),
+//	.gpio_backlight = 133,
+//	.flags = DRM_ENCON_DUMMY_USE_BL_GPIO,
+};
+
+static void mx53_loco_init_chimei_1280x800(void)
+{
+	/* LCD panel power enable */
+	gpio_request(MX53_LOCO_LCD_BL, "disp0-bl");
+	gpio_direction_output(MX53_LOCO_LCD_BL, 1);
+
+	mx53_clock_ldb_pll4(71000000 * 7);
+
+	mx53_setup_ldb(LDB_DI0_VS_POL_ACT_LOW | LDB_BIT_MAP_CH0_JEIDA |
+			LDB_CH0_MODE_EN_TO_DI0);
+
+	ipu_data.di[0].clk_ext = 1;
+	ipu_data.di[0].clk_sync = 1;
+
+	platform_device_register_data(NULL, "drm-encon-dummy", 0,
+                        &chimei_1280x800_encon_data,
+			sizeof(chimei_1280x800_encon_data));
+
+	loco_add_bl_pwm();
+}
+
+static int __init mx53_loco_fb_init(void)
+{
+	if (!machine_is_mx53_loco())
+		return 0;
+#if 0
+	if (loco_display_init) {
+		loco_display_init();
+	} else {
+		pr_info("No display specified. Pass video= followed by one of the "
+				"following display types: %s %s %s\n",
+				DISPLAY_HITACHI_800_480_NAME,
+				DISPLAY_HITACHI_800_480_LVDS_NAME,
+				DISPLAY_CHIMEI_1280_800_NAME);
+		return 0;
+	}
+#endif
+	imx53_add_ipuv3(&ipu_data);
+
+	return 0;
+}
+late_initcall(mx53_loco_fb_init);
+
+static int __init mx53_loco_display(char *options)
+{
+	if (!strcmp(options, DISPLAY_HITACHI_800_480_NAME)) {
+		loco_display_init = mx53_loco_init_hitachi_800x480;
+		mx53_loco_hdmi_adapter = 0;
+		return 0;
+	}
+
+	if (!strcmp(options, DISPLAY_HITACHI_800_480_LVDS_NAME)) {
+		loco_display_init = mx53_loco_init_hitachi_800x480_lvds;
+		mx53_loco_hdmi_adapter = 0;
+		return 0;
+	}
+
+	if (!strcmp(options, DISPLAY_CHIMEI_1280_800_NAME)) {
+		loco_display_init = mx53_loco_init_chimei_1280x800;
+		mx53_loco_hdmi_adapter = 0;
+		return 0;
+	}
+
+	pr_err("unknown display option %s\n", options);
+
+	return 0;
+}
+__setup("video=", mx53_loco_display);
+
+static void __init mx53_loco_map_io(void)
+{
+	mx53_map_io();
+	init_consistent_dma_size(SZ_8M + SZ_4M);
+}
+
 MACHINE_START(MX53_LOCO, "Freescale MX53 LOCO Board")
-	.map_io = mx53_map_io,
+	.map_io = mx53_loco_map_io,
 	.init_early = imx53_init_early,
 	.init_irq = mx53_init_irq,
 	.handle_irq = imx53_handle_irq,
