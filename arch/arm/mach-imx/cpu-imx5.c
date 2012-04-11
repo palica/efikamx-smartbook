@@ -19,6 +19,7 @@
 #include <linux/err.h>
 #include <mach/hardware.h>
 #include <linux/io.h>
+#include <mach/iram.h>
 
 static int mx5_cpu_rev = -1;
 
@@ -236,7 +237,24 @@ static int __init post_cpu_init(void)
 		}
 	}
 
+	if (cpu_is_mx53())
+		iram_init(MX53_IRAM_BASE_ADDR, MX53_IRAM_SIZE);
+	if (cpu_is_mx51())
+		iram_init(MX51_IRAM_BASE_ADDR, MX51_IRAM_SIZE);
+
 	return 0;
 }
 
 postcore_initcall(post_cpu_init);
+
+#include <mach/devices-common.h>
+static int __init mx5_vpu_register(void)
+{
+	if (cpu_is_mx51())
+		mx51_add_mxc_vpu();
+	if (cpu_is_mx53())
+		mx53_add_mxc_vpu();
+
+	return 0;
+}
+late_initcall(mx5_vpu_register);

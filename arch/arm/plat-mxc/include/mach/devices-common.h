@@ -288,6 +288,10 @@ struct imx_mxc_rtc_data {
 struct platform_device *__init imx_add_mxc_rtc(
 		const struct imx_mxc_rtc_data *data);
 
+struct platform_device *__init mx27_add_mxc_vpu(void);
+struct platform_device *__init mx51_add_mxc_vpu(void);
+struct platform_device *__init mx53_add_mxc_vpu(void);
+
 /* mxc_w1 */
 struct imx_mxc_w1_data {
 	resource_size_t iobase;
