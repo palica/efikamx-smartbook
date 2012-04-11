@@ -42,6 +42,8 @@
 #define nfc_is_v21()		(cpu_is_mx25() || cpu_is_mx35())
 #define nfc_is_v1()		(cpu_is_mx31() || cpu_is_mx27() || cpu_is_mx21())
 #define nfc_is_v3_2()		(cpu_is_mx51() || cpu_is_mx53())
+#define nfc_is_v3_2a()		(cpu_is_mx51())
+#define nfc_is_v3_2b()		(cpu_is_mx53())
 #define nfc_is_v3()		nfc_is_v3_2()
 
 /* Addresses for NFC registers */
@@ -120,7 +122,8 @@
 #define NFC_V3_CONFIG2_2CMD_PHASES		(1 << 4)
 #define NFC_V3_CONFIG2_NUM_ADDR_PHASE0		(1 << 5)
 #define NFC_V3_CONFIG2_ECC_MODE_8		(1 << 6)
-#define NFC_V3_CONFIG2_PPB(x)			(((x) & 0x3) << 7)
+#define NFC_V3_MX51_CONFIG2_PPB(x)		(((x) & 0x3) << 7)
+#define NFC_V3_MX53_CONFIG2_PPB(x)		(((x) & 0x3) << 8)
 #define NFC_V3_CONFIG2_NUM_ADDR_PHASE1(x)	(((x) & 0x3) << 12)
 #define NFC_V3_CONFIG2_INT_MSK			(1 << 15)
 #define NFC_V3_CONFIG2_ST_CMD(x)		(((x) & 0xff) << 24)
@@ -898,7 +901,10 @@ static void preset_v3(struct mtd_info *mtd)
 	}
 
 	if (mtd->writesize) {
-		config2 |= NFC_V3_CONFIG2_PPB(ffs(mtd->erasesize / mtd->writesize) - 6);
+		if (nfc_is_v3_2a())
+			config2 |= NFC_V3_MX51_CONFIG2_PPB(ffs(mtd->erasesize / mtd->writesize) - 6);
+		else
+			config2 |= NFC_V3_MX53_CONFIG2_PPB(ffs(mtd->erasesize / mtd->writesize) - 6);
 		host->eccsize = get_eccsize(mtd);
 		if (host->eccsize == 8)
 			config2 |= NFC_V3_CONFIG2_ECC_MODE_8;
