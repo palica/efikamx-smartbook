@@ -1507,6 +1507,7 @@ static int __devexit soc_camera_pdrv_remove(struct platform_device *pdev)
 }
 
 static struct platform_driver __refdata soc_camera_pdrv = {
+	.probe   = soc_camera_pdrv_probe,
 	.remove  = __devexit_p(soc_camera_pdrv_remove),
 	.driver  = {
 		.name	= "soc-camera-pdrv",
@@ -1516,7 +1517,7 @@ static struct platform_driver __refdata soc_camera_pdrv = {
 
 static int __init soc_camera_init(void)
 {
-	return platform_driver_probe(&soc_camera_pdrv, soc_camera_pdrv_probe);
+	return platform_driver_register(&soc_camera_pdrv);
 }
 
 static void __exit soc_camera_exit(void)
@@ -1524,7 +1525,7 @@ static void __exit soc_camera_exit(void)
 	platform_driver_unregister(&soc_camera_pdrv);
 }
 
-module_init(soc_camera_init);
+subsys_initcall(soc_camera_init);
 module_exit(soc_camera_exit);
 
 MODULE_DESCRIPTION("Image capture bus driver");

@@ -36,13 +36,44 @@ static int soc_camera_platform_s_stream(struct v4l2_subdev *sd, int enable)
 	return p->set_capture(p, enable);
 }
 
-static int soc_camera_platform_fill_fmt(struct v4l2_subdev *sd,
+static int width = 1280;
+static int height = 720;
+
+static int soc_camera_platform_g_fmt(struct v4l2_subdev *sd,
+		struct v4l2_mbus_framefmt *mf)
+{
+	struct soc_camera_platform_info *p = v4l2_get_subdevdata(sd);
+
+	mf->width	= width;
+	mf->height	= height;
+	mf->code	= p->format.code;
+	mf->colorspace	= p->format.colorspace;
+	mf->field	= p->format.field;
+
+	return 0;
+}
+
+static int soc_camera_platform_s_fmt(struct v4l2_subdev *sd,
+		struct v4l2_mbus_framefmt *mf)
+{
+	struct soc_camera_platform_info *p = v4l2_get_subdevdata(sd);
+
+	width = mf->width;
+	height = mf->height;
+	mf->code	= p->format.code;
+	mf->colorspace	= p->format.colorspace;
+	mf->field	= p->format.field;
+
+	return 0;
+}
+
+static int soc_camera_platform_try_fmt(struct v4l2_subdev *sd,
 					struct v4l2_mbus_framefmt *mf)
 {
 	struct soc_camera_platform_info *p = v4l2_get_subdevdata(sd);
 
-	mf->width	= p->format.width;
-	mf->height	= p->format.height;
+	width = mf->width;
+	height = mf->height;
 	mf->code	= p->format.code;
 	mf->colorspace	= p->format.colorspace;
 	mf->field	= p->format.field;
@@ -111,9 +142,9 @@ static struct v4l2_subdev_video_ops platform_subdev_video_ops = {
 	.enum_mbus_fmt	= soc_camera_platform_enum_fmt,
 	.cropcap	= soc_camera_platform_cropcap,
 	.g_crop		= soc_camera_platform_g_crop,
-	.try_mbus_fmt	= soc_camera_platform_fill_fmt,
-	.g_mbus_fmt	= soc_camera_platform_fill_fmt,
-	.s_mbus_fmt	= soc_camera_platform_fill_fmt,
+	.try_mbus_fmt	= soc_camera_platform_try_fmt,
+	.g_mbus_fmt	= soc_camera_platform_g_fmt,
+	.s_mbus_fmt	= soc_camera_platform_s_fmt,
 	.g_mbus_config	= soc_camera_platform_g_mbus_config,
 };
 
