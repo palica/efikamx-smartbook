@@ -64,6 +64,11 @@ extern const struct imx_pata_imx_data imx53_pata_imx_data;
 #define imx53_add_pata_imx() \
 	imx_add_pata_imx(&imx53_pata_imx_data)
 
+extern const struct imx_srtc_data imx53_imx_srtc_data __initconst;
+#define imx53_add_srtc()        \
+	imx_add_srtc(&imx53_imx_srtc_data)
+
+
 extern struct platform_device *__init imx53_add_ahci_imx(void);
 
 extern const struct imx_ipuv3_data imx53_ipuv3_data __initconst;

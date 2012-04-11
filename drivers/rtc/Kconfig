@@ -634,6 +634,16 @@ config RTC_MXC
 	   This driver can also be built as a module, if so, the module
 	   will be called "rtc-mxc".
 
+config RTC_DRV_IMX_V2
+	tristate "Freescale IMX Secure Real Time Clock"
+	depends on ARCH_MXC
+	depends on RTC_CLASS
+	help
+	   Support for Freescale IMX SRTC
+
+	   This driver can also be built as a module, if so, the module
+	   will be called "rtc-imx-v2".
+
 config RTC_DRV_BQ4802
 	tristate "TI BQ4802"
 	help
