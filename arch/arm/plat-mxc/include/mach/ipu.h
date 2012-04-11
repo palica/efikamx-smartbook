@@ -80,6 +80,7 @@ enum pixel_fmt {
 	/* 3 bytes */
 	IPU_PIX_FMT_RGB24,
 	IPU_PIX_FMT_BGR24,
+	IPU_PIX_FMT_GBR24,
 	/* 4 bytes */
 	IPU_PIX_FMT_GENERIC_32,
 	IPU_PIX_FMT_RGB32,

@@ -1721,8 +1721,8 @@ config HW_PERF_EVENTS
 source "mm/Kconfig"
 
 config FORCE_MAX_ZONEORDER
-	int "Maximum zone order" if ARCH_SHMOBILE
-	range 11 64 if ARCH_SHMOBILE
+	int "Maximum zone order" if ARCH_SHMOBILE || ARCH_MX5
+	range 11 64 if ARCH_SHMOBILE || ARCH_MX5
 	default "9" if SA1111
 	default "11"
 	help
