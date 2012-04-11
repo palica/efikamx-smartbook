@@ -80,14 +80,6 @@ int drm_get_platform_dev(struct platform_device *platdev,
 			goto err_g3;
 	}
 
-	/* setup the grouping for the legacy output */
-	if (drm_core_check_feature(dev, DRIVER_MODESET)) {
-		ret = drm_mode_group_init_legacy_group(dev,
-				&dev->primary->mode_group);
-		if (ret)
-			goto err_g3;
-	}
-
 	list_add_tail(&dev->driver_item, &driver->device_list);
 
 	mutex_unlock(&drm_global_mutex);
