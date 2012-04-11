@@ -1,0 +1,8 @@
+config DRM_SDRM
+	tristate
+	depends on DRM
+	select DRM_KMS_HELPER
+	select FB_CFB_FILLRECT
+	select FB_CFB_COPYAREA
+	select FB_CFB_IMAGEBLIT
+
