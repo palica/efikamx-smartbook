@@ -85,6 +85,7 @@ static __inline__ void __arch_decomp_setup(unsigned long arch_id)
 	case MACH_TYPE_PCA100:
 	case MACH_TYPE_MXT_TD60:
 	case MACH_TYPE_IMX27IPCAM:
+	case MACH_TYPE_CPS_EUROPE_VHT:
 		uart_base = MX2X_UART1_BASE_ADDR;
 		break;
 	case MACH_TYPE_MX31LITE:
