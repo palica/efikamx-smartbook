@@ -503,7 +503,7 @@ static long __video_do_ioctl(struct file *file,
 	struct v4l2_fh *vfh = NULL;
 	int use_fh_prio = 0;
 	long ret_prio = 0;
-	long ret = -ENOTTY;
+	long ret = -EINVAL;
 
 	if (ops == NULL) {
 		printk(KERN_WARNING "videodev: \"%s\" has no ioctl_ops.\n",

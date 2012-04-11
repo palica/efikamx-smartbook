@@ -15,6 +15,8 @@
 #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/module.h>
+#include <linux/clk.h>
+#include <linux/err.h>
 #include <mach/hardware.h>
 #include <linux/io.h>
 
@@ -150,10 +152,54 @@ int mx50_revision(void)
 }
 EXPORT_SYMBOL(mx50_revision);
 
+/*
+ * The MIPI HSC unit has been removed from the i.MX51 Reference Manual by
+ * the Freescale marketing division. However this did not remove the
+ * hardware from the chip which still needs to be configured for proper
+ * IPU support.
+ */
+static void __init ipu_mipi_setup(void)
+{
+	struct clk *hsc_clk;
+	void __iomem *hsc_addr;
+
+	hsc_addr = MX51_IO_ADDRESS(MX51_MIPI_HSC_BASE_ADDR);
+
+	hsc_clk = clk_get_sys(NULL, "mipi_hsp");
+	if (IS_ERR(hsc_clk)) {
+		pr_err("failed to get mipi clock\n");
+		return;
+	}
+	clk_enable(hsc_clk);
+
+	/* setup MIPI module to legacy mode */
+	__raw_writel(0xf00, hsc_addr);
+
+	/* CSI mode: reserved; DI control mode: legacy (from Freescale BSP) */
+	__raw_writel(__raw_readl(hsc_addr + 0x800) | 0x30ff,
+		hsc_addr + 0x800);
+
+	clk_disable(hsc_clk);
+	clk_put(hsc_clk);
+}
+
+#define M4IF_FBPM0	0x40
+#define M4IF_FBPM1	0x44
+#define M4IF_MIF4	0x48
+#define M4IF_FPWC	0x9C
+
 static int __init post_cpu_init(void)
 {
 	unsigned int reg;
 	void __iomem *base;
+
+	/* hard reset the IPU */
+	reg = readl(MX51_IO_ADDRESS(MX51_SRC_BASE_ADDR));
+	reg |= 1 << 3;
+	writel(reg, MX51_IO_ADDRESS(MX51_SRC_BASE_ADDR));
+
+	if (cpu_is_mx51())
+		ipu_mipi_setup();
 
 	if (cpu_is_mx51() || cpu_is_mx53()) {
 		if (cpu_is_mx51())
@@ -179,6 +225,15 @@ static int __init post_cpu_init(void)
 		__raw_writel(0x0, base + 0x4C);
 		reg = __raw_readl(base + 0x50) & 0x00FFFFFF;
 		__raw_writel(reg, base + 0x50);
+
+		if (cpu_is_mx51()) {
+			base = MX51_IO_ADDRESS(MX51_M4IF_BASE_ADDR);
+
+			__raw_writel(0x001133, base + M4IF_FBPM0);
+			__raw_writel(0x0, base + M4IF_FBPM1);
+			__raw_writel(0x240126, base + M4IF_FPWC);
+			__raw_writel(0x230185, base + M4IF_MIF4);
+		}
 	}
 
 	return 0;

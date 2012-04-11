@@ -84,6 +84,7 @@ static void *vb2_dma_contig_cookie(void *buf_priv)
 static void *vb2_dma_contig_vaddr(void *buf_priv)
 {
 	struct vb2_dc_buf *buf = buf_priv;
+
 	if (!buf)
 		return 0;
 
@@ -113,6 +114,7 @@ static int vb2_dma_contig_mmap(void *buf_priv, struct vm_area_struct *vma)
 static void *vb2_dma_contig_get_userptr(void *alloc_ctx, unsigned long vaddr,
 					unsigned long size, int write)
 {
+	struct vb2_dc_conf *conf = alloc_ctx;
 	struct vb2_dc_buf *buf;
 	struct vm_area_struct *vma;
 	dma_addr_t dma_addr = 0;
@@ -124,7 +126,7 @@ static void *vb2_dma_contig_get_userptr(void *alloc_ctx, unsigned long vaddr,
 
 	ret = vb2_get_contig_userptr(vaddr, size, &vma, &dma_addr);
 	if (ret) {
-		printk(KERN_ERR "Failed acquiring VMA for vaddr 0x%08lx\n",
+		dev_err(conf->dev, "Failed acquiring VMA for vaddr 0x%08lx\n",
 				vaddr);
 		kfree(buf);
 		return ERR_PTR(ret);

@@ -273,6 +273,7 @@ struct vb2_queue {
 	enum v4l2_buf_type		type;
 	unsigned int			io_modes;
 	unsigned int			io_flags;
+	struct device			*dev;
 
 	const struct vb2_ops		*ops;
 	const struct vb2_mem_ops	*mem_ops;
