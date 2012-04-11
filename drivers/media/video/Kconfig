@@ -1074,6 +1074,17 @@ config VIDEO_SH_MOBILE_CEU
 	---help---
 	  This is a v4l2 driver for the SuperH Mobile CEU Interface
 
+config VIDEO_IMX_IPU_COMMON
+	tristate
+
+config VIDEO_IMX_IPU_OVL
+	tristate "i.MX51/53 IPUv3 based overlay driver"
+	depends on VIDEO_DEV && DRM_IMX_IPUV3
+	select VIDEOBUF2_DMA_CONTIG
+	select VIDEO_IMX_IPU_COMMON
+	---help---
+	  This is a v4l2 overlay video driver for the i.MX51/53.
+
 config VIDEO_OMAP1
 	tristate "OMAP1 Camera Interface driver"
 	depends on VIDEO_DEV && ARCH_OMAP1 && SOC_CAMERA
@@ -1088,6 +1099,14 @@ config VIDEO_OMAP2
 	select VIDEOBUF_DMA_SG
 	---help---
 	  This is a v4l2 driver for the TI OMAP2 camera capture interface
+
+config VIDEO_IMX_IPU_SCALER
+	tristate "i.MX51/53 IPUv3 based image scaler driver"
+	depends on VIDEO_DEV && DRM_IMX_IPUV3
+	select VIDEOBUF2_DMA_CONTIG
+	select VIDEO_IMX_IPU_COMMON
+	---help---
+	  This is a v4l2 scaler video driver for the i.MX51/53.
 
 config VIDEO_MX2_HOSTSUPPORT
 	bool
