@@ -44,6 +44,8 @@
 static LIST_HEAD(clocks);
 static DEFINE_MUTEX(clocks_mutex);
 
+#ifndef CONFIG_USE_COMMON_STRUCT_CLK
+
 /*-------------------------------------------------------------------------
  * Standard clock functions defined in include/linux/clk.h
  *-------------------------------------------------------------------------*/
@@ -199,6 +201,7 @@ struct clk *clk_get_parent(struct clk *clk)
 	return clk->parent;
 }
 EXPORT_SYMBOL(clk_get_parent);
+#endif
 
 /*
  * Get the resulting clock rate from a PLL register value and the input
@@ -244,3 +247,8 @@ unsigned long mxc_decode_pll(unsigned int reg_val, u32 freq)
 
 	return ll;
 }
+
+#ifdef CONFIG_USE_COMMON_STRUCT_CLK
+DEFINE_SPINLOCK(imx_ccm_lock);
+EXPORT_SYMBOL_GPL(imx_ccm_lock);
+#endif /* CONFIG_USE_COMMON_STRUCT_CLK */

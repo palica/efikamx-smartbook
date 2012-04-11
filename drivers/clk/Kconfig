@@ -8,3 +8,22 @@ config HAVE_CLK_PREPARE
 
 config HAVE_MACH_CLKDEV
 	bool
+
+config USE_COMMON_STRUCT_CLK
+	bool
+
+config CLK_DEBUG
+	bool "Export clock debug information through debugfs"
+	depends on USE_COMMON_STRUCT_CLK && PM_DEBUG &&DEBUG_FS
+
+config USE_COMMON_CLK_DIVIDER
+	bool
+
+config USE_COMMON_CLK_FACTOR_FIXED
+	bool
+
+config USE_COMMON_CLK_MUX
+	bool
+
+config USE_COMMON_CLK_GATE
+	bool

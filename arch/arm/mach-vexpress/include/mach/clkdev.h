@@ -11,5 +11,6 @@ struct clk {
 
 #define __clk_get(clk) ({ 1; })
 #define __clk_put(clk) do { } while (0)
+#endif
 
 #endif
