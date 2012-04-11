@@ -41,6 +41,11 @@ const struct imx_fsl_usb2_udc_data imx51_fsl_usb2_udc_data __initconst =
 	imx_fsl_usb2_udc_data_entry_single(MX51);
 #endif
 
+#ifdef CONFIG_SOC_IMX53
+const struct imx_fsl_usb2_udc_data imx53_fsl_usb2_udc_data __initconst =
+	imx_fsl_usb2_udc_data_entry_single(MX53);
+#endif
+
 struct platform_device *__init imx_add_fsl_usb2_udc(
 		const struct imx_fsl_usb2_udc_data *data,
 		const struct fsl_usb2_platform_data *pdata)
