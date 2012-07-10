@@ -21,6 +21,7 @@
 #include <linux/clk.h>
 #include <linux/regulator/consumer.h>
 #include <linux/pinctrl/consumer.h>
+#include <linux/usb/of.h>
 
 #include "ci.h"
 #include "ci13xxx_imx.h"
@@ -111,6 +112,8 @@ static int ci13xxx_imx_probe(struct platform_device *pdev)
 	pdata->flags = CI13XXX_REQUIRE_TRANSCEIVER |
 		       CI13XXX_PULLUP_ON_VBUS |
 		       CI13XXX_DISABLE_STREAMING;
+
+	pdata->phy_mode = of_usb_get_phy_mode(pdev->dev.of_node);
 
 	data = devm_kzalloc(&pdev->dev, sizeof(*data), GFP_KERNEL);
 	if (!data) {

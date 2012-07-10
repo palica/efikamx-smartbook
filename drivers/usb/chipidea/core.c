@@ -67,6 +67,8 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/otg.h>
 #include <linux/usb/chipidea.h>
+#include <linux/usb/of.h>
+#include <linux/phy.h>
 
 #include "ci.h"
 #include "udc.h"
@@ -209,6 +211,41 @@ static int hw_device_init(struct ci13xxx *ci, void __iomem *base)
 	/* HCSPARAMS.bf.ppc SHOULD BE zero for device */
 
 	return 0;
+}
+
+static void hw_phymode_configure(struct ci13xxx *ci)
+{
+	u32 portsc, lpm;
+
+	switch (ci->platdata->phy_mode) {
+	case USBPHY_INTERFACE_MODE_UTMI:
+		portsc = PORTSC_PTS(PTS_UTMI);
+		lpm = DEVLC_PTS(PTS_UTMI);
+		break;
+	case USBPHY_INTERFACE_MODE_UTMIW:
+		portsc = PORTSC_PTS(PTS_UTMI) | PORTSC_PTW;
+		lpm = DEVLC_PTS(PTS_UTMI) | DEVLC_PTW;
+		break;
+	case USBPHY_INTERFACE_MODE_ULPI:
+		portsc = PORTSC_PTS(PTS_ULPI);
+		lpm = DEVLC_PTS(PTS_ULPI);
+		break;
+	case USBPHY_INTERFACE_MODE_SERIAL:
+		portsc = PORTSC_PTS(PTS_SERIAL);
+		lpm = DEVLC_PTS(PTS_SERIAL);
+		break;
+	case USBPHY_INTERFACE_MODE_HSIC:
+		portsc = PORTSC_PTS(PTS_HSIC);
+		lpm = DEVLC_PTS(PTS_HSIC);
+		break;
+	default:
+		return;
+	}
+
+	if (ci->hw_bank.lpm)
+		hw_write(ci, OP_DEVLC, DEVLC_PTS(7) | DEVLC_PTW, lpm);
+	else
+		hw_write(ci, OP_PORTSC, PORTSC_PTS(7) | PORTSC_PTW, portsc);
 }
 
 /**
@@ -475,6 +512,8 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 			? CI_ROLE_HOST
 			: CI_ROLE_GADGET;
 	}
+
+	hw_phymode_configure(ci);
 
 	ret = ci_role_start(ci, ci->role);
 	if (ret) {
