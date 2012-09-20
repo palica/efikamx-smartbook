@@ -1,0 +1,121 @@
+* Clock bindings for Freescale i.MX25
+
+Required properties:
+- compatible: Should be "fsl,imx25-ccm"
+- reg: Address and length of the register set
+- interrupts: Should contain CCM interrupt
+- #clock-cells: Should be <1>
+
+The clock consumer should specify the desired clock by having the clock
+ID in its "clocks" phandle cell.  The following is a full list of i.MX25
+clocks and IDs.
+
+	Clock			ID
+	---------------------------
+	dummy			0
+	osc			1
+	mpll			2
+	upll			3
+	mpll_cpu_3_4		4
+	cpu_sel			5
+	cpu			6
+	ahb			7
+	usb_div			8
+	ipg			9
+	per0_sel		10
+	per1_sel		11
+	per2_sel		12
+	per3_sel		13
+	per4_sel		14
+	per5_sel		15
+	per6_sel		16
+	per7_sel		17
+	per8_sel		18
+	per9_sel		19
+	per10_sel		20
+	per11_sel		21
+	per12_sel		22
+	per13_sel		23
+	per14_sel		24
+	per15_sel		25
+	per0			26
+	per1			27
+	per2			28
+	per3			29
+	per4			30
+	per5			31
+	per6			32
+	per7			33
+	per8			34
+	per9			35
+	per10			36
+	per11			37
+	per12			38
+	per13			39
+	per14			40
+	per15			41
+	csi_ipg_per		42
+	esdhc1_ipg_per		43
+	esdhc2_ipg_per		44
+	gpt_ipg_per		45
+	i2c_ipg_per		46
+	lcdc_ipg_per		47
+	nfc_ipg_per		48
+	ssi1_ipg_per		49
+	ssi2_ipg_per		50
+	uart_ipg_per		51
+	csi_ahb			52
+	esdhc1_ahb		53
+	esdhc2_ahb		54
+	fec_ahb			55
+	lcdc_ahb		56
+	sdma_ahb		57
+	usbotg_ahb		58
+	can1_ipg		59
+	can2_ipg		60
+	csi_ipg			61
+	cspi1_ipg		62
+	cspi2_ipg		63
+	cspi3_ipg		64
+	dryice_ipg		65
+	esdhc1_ipg		66
+	esdhc2_ipg		67
+	fec_ipg			68
+	iim_ipg			69
+	kpp_ipg			70
+	lcdc_ipg		71
+	pwm1_ipg		72
+	pwm2_ipg		73
+	pwm3_ipg		74
+	pwm4_ipg		75
+	sdma_ipg		76
+	ssi1_ipg		77
+	ssi2_ipg		78
+	tsc_ipg			79
+	uart1_ipg		80
+	uart2_ipg		81
+	uart3_ipg		82
+	uart4_ipg		83
+	uart5_ipg		84
+	wdt_ipg			85
+
+Examples:
+
+clks: ccm@53f80000 {
+	compatible = "fsl,imx25-ccm";
+	reg = <0x53f80000 0x4000>;
+	interrupts = <31>;
+	clock-output-names = ...
+			"uart_ipg",
+			"uart_serial",
+			...;
+};
+
+uart1: serial@43f90000 {
+	compatible = "fsl,imx25-uart", "fsl,imx21-uart";
+	reg = <0x43f90000 0x4000>;
+	interrupts = <45>;
+	clocks = <&clks 79>, <&clks 50>;
+	clock-names = "ipg", "per";
+	status = "disabled";
+};
