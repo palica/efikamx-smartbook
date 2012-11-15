@@ -14,6 +14,7 @@
 #include <linux/clk.h>
 #include <linux/err.h>
 #include <linux/io.h>
+#include <linux/delay.h>
 
 #include "ci13xxx_imx.h"
 
@@ -52,6 +53,30 @@ static struct usbmisc_usb_device *get_usbdev(struct device *dev)
 		return ERR_PTR(ret);
 
 	return &usbmisc->usbdev[i];
+}
+
+static int usbmisc_imx25_post(struct device *dev)
+{
+	struct usbmisc_usb_device *usbdev;
+	void __iomem *reg;
+	unsigned long flags;
+	u32 val;
+
+	usbdev = get_usbdev(dev);
+	if (IS_ERR(usbdev))
+		return PTR_ERR(usbdev);
+
+	reg = usbmisc->base + 0x08;
+
+	if (usbdev->evdo) {
+		spin_lock_irqsave(&usbmisc->lock, flags);
+		val = readl(reg);
+		writel(val | (1 << 23), reg);
+		spin_unlock_irqrestore(&usbmisc->lock, flags);
+		mdelay(5); /* needed to stabilize voltage */
+	}
+
+	return 0;
 }
 
 static int usbmisc_imx53_init(struct device *dev)
@@ -99,6 +124,10 @@ static int usbmisc_imx6q_init(struct device *dev)
 	return 0;
 }
 
+static const struct usbmisc_ops imx25_usbmisc_ops = {
+	.post = usbmisc_imx25_post,
+};
+
 static const struct usbmisc_ops imx53_usbmisc_ops = {
 	.init = usbmisc_imx53_init,
 };
@@ -108,6 +137,7 @@ static const struct usbmisc_ops imx6q_usbmisc_ops = {
 };
 
 static const struct of_device_id usbmisc_imx_dt_ids[] = {
+	{ .compatible = "fsl,imx25-usbmisc", .data = (void *)&imx25_usbmisc_ops },
 	{ .compatible = "fsl,imx53-usbmisc", .data = (void *)&imx53_usbmisc_ops },
 	{ .compatible = "fsl,imx6q-usbmisc", .data = (void *)&imx6q_usbmisc_ops },
 	{ /* sentinel */ }
