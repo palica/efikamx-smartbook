@@ -168,6 +168,7 @@
 				compatible = "fsl,imx51-usb", "fsl,imx27-usb";
 				reg = <0x73f80200 0x0200>;
 				interrupts = <14>;
+				phy-mode = "utmiw";
 				status = "disabled";
 			};
 
@@ -175,6 +176,7 @@
 				compatible = "fsl,imx51-usb", "fsl,imx27-usb";
 				reg = <0x73f80400 0x0200>;
 				interrupts = <16>;
+				phy-mode = "utmi";
 				status = "disabled";
 			};
 
