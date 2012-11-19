@@ -48,13 +48,13 @@ static int ci_otg_set_host(struct usb_otg *otg, struct usb_bus *host)
  * This function create otg struct, if the device can switch between
  * device and host.
  */
-int ci_hdrc_otg_init(struct ci13xxx *ci)
+int ci_hdrc_otg_init(struct ci13xxx *ci, struct usb_otg *otg)
 {
 	/* Useless at current */
-	ci->otg.set_peripheral = ci_otg_set_peripheral;
-	ci->otg.set_host = ci_otg_set_host;
+	ci->otg->set_peripheral = ci_otg_set_peripheral;
+	ci->otg->set_host = ci_otg_set_host;
 	if (!IS_ERR_OR_NULL(ci->transceiver))
-		ci->transceiver->otg = &ci->otg;
+		ci->transceiver->otg = ci->otg;
 	hw_write(ci, OP_OTGSC, OTGSC_IDIE, OTGSC_IDIE);
 
 	return 0;

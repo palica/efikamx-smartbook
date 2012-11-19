@@ -92,7 +92,7 @@ EXPORT_SYMBOL_GPL(usbmisc_get_init_data);
 
 static int ci13xxx_otg_set_vbus(struct usb_otg *otg, bool enabled)
 {
-
+#if 0
 	struct ci13xxx	*ci = container_of(otg, struct ci13xxx, otg);
 	struct regulator *reg_vbus = ci->reg_vbus;
 
@@ -104,7 +104,7 @@ static int ci13xxx_otg_set_vbus(struct usb_otg *otg, bool enabled)
 		else
 			regulator_disable(reg_vbus);
 	}
-
+#endif
 	return 0;
 }
 
@@ -239,6 +239,7 @@ static int __devinit ci13xxx_imx_probe(struct platform_device *pdev)
 		}
 	}
 
+	ci13xxx_get_dr_flags(pdev->dev.of_node, pdata);
 	ci13xxx_get_dr_mode(pdev->dev.of_node, pdata);
 
 	plat_ci = ci13xxx_add_device(&pdev->dev,
@@ -282,7 +283,7 @@ static int __devinit ci13xxx_imx_probe(struct platform_device *pdev)
 			goto put_np;
 		}
 	} else if (ci->is_otg) {
-		ci->otg.set_vbus = ci13xxx_otg_set_vbus;
+		ci->otg->set_vbus = ci13xxx_otg_set_vbus;
 		ci->reg_vbus = data->reg_vbus;
 	}
 

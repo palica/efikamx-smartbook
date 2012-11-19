@@ -68,6 +68,9 @@
 #include <linux/usb/gadget.h>
 #include <linux/usb/otg.h>
 #include <linux/usb/chipidea.h>
+#include <linux/of_usbphy.h>
+#include <linux/phy.h>
+#include <linux/usb/ulpi.h>
 
 #include "ci.h"
 #include "udc.h"
@@ -213,6 +216,26 @@ static int hw_device_init(struct ci13xxx *ci, void __iomem *base)
 	return 0;
 }
 
+void hw_portsc_configure(struct ci13xxx *ci)
+{
+	if (ci->platdata->flags & CI13XXX_PORTSC_PTW_16BIT)
+		hw_write(ci, OP_PORTSC, PORTSC_PTW, 0x1 << ffs_nr(PORTSC_PTW));
+
+	if (ci->platdata->flags & CI13XXX_PORTSC_PTS_UTMI) {
+		hw_write(ci, OP_PORTSC, PORTSC_PTS, 0x0 << ffs_nr(PORTSC_PTS));
+		hw_write(ci, OP_PORTSC, PORTSC_STS, 0x0 << ffs_nr(PORTSC_STS));
+	} else if (ci->platdata->flags & CI13XXX_PORTSC_PTS_ULPI) {
+		hw_write(ci, OP_PORTSC, PORTSC_PTS, 0x2 << ffs_nr(PORTSC_PTS));
+		hw_write(ci, OP_PORTSC, PORTSC_STS, 0x0 << ffs_nr(PORTSC_STS));
+	} else if (ci->platdata->flags & CI13XXX_PORTSC_PTS_FSLS) {
+		hw_write(ci, OP_PORTSC, PORTSC_PTS, 0x3 << ffs_nr(PORTSC_PTS));
+		hw_write(ci, OP_PORTSC, PORTSC_STS, 0x1 << ffs_nr(PORTSC_STS));
+	}
+
+	if (ci->transceiver)
+		usb_phy_init(ci->transceiver);
+}
+
 /**
  * hw_device_reset: resets chip (execute without interruption)
  * @ci: the controller
@@ -334,10 +357,10 @@ static void ci_handle_id_switch(struct ci13xxx *ci)
 
 		/* 2. Turn on/off vbus according to coming role */
 		if (ci_otg_role(ci) == CI_ROLE_GADGET) {
-			otg_set_vbus(&ci->otg, false);
+			otg_set_vbus(ci->otg, false);
 			ci_wait_vbus_stable(ci, true);
 		} else if (ci_otg_role(ci) == CI_ROLE_HOST) {
-			otg_set_vbus(&ci->otg, true);
+			otg_set_vbus(ci->otg, true);
 			ci_wait_vbus_stable(ci, false);
 		}
 
@@ -387,7 +410,7 @@ static void ci_delayed_work(struct work_struct *work)
 	struct delayed_work *dwork = to_delayed_work(work);
 	struct ci13xxx *ci = container_of(dwork, struct ci13xxx, dwork);
 
-	otg_set_vbus(&ci->otg, true);
+	otg_set_vbus(ci->otg, true);
 
 }
 
@@ -516,6 +539,31 @@ void ci13xxx_remove_device(struct platform_device *pdev)
 }
 EXPORT_SYMBOL_GPL(ci13xxx_remove_device);
 
+void ci13xxx_get_dr_flags(struct device_node *of_node, struct ci13xxx_platform_data *pdata)
+{
+	int interface = of_get_usbphy_mode(of_node);
+
+	switch (interface) {
+	case USBPHY_INTERFACE_MODE_UTMI:
+		pdata->flags |= CI13XXX_PORTSC_PTS_UTMI;
+		break;
+	case USBPHY_INTERFACE_MODE_UTMIW:
+		pdata->flags |= CI13XXX_PORTSC_PTS_UTMI |
+			CI13XXX_PORTSC_PTW_16BIT;
+		break;
+	case USBPHY_INTERFACE_MODE_ULPI:
+		pdata->flags |= CI13XXX_PORTSC_PTS_ULPI;
+		break;
+	case USBPHY_INTERFACE_MODE_SERIAL:
+		pdata->flags |= CI13XXX_PORTSC_PTS_FSLS;
+		break;
+	case USBPHY_INTERFACE_MODE_NA:
+	default:
+		pr_err("no phy interface defined\n");
+	}
+}
+EXPORT_SYMBOL_GPL(ci13xxx_get_dr_flags);
+
 void ci13xxx_get_dr_mode(struct device_node *of_node, struct ci13xxx_platform_data *pdata)
 {
 	const unsigned char *dr_mode;
@@ -568,10 +616,15 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 	ci->events = 0;
 	ci->dev = dev;
 	ci->platdata = dev->platform_data;
-	if (ci->platdata->phy)
+	if (ci->platdata->phy) {
 		ci->transceiver = ci->platdata->phy;
-	else
+	} else if (ci->platdata->flags & CI13XXX_PORTSC_PTS_ULPI) {
+		ci->transceiver = otg_ulpi_create(&ulpi_viewport_access_ops, ULPI_OTG_DRVVBUS |
+				ULPI_OTG_DRVVBUS_EXT | ULPI_OTG_EXTVBUSIND);
+		ci->transceiver->io_priv = base + 0x170;
+	} else {
 		ci->global_phy = true;
+	}
 
 	ret = hw_device_init(ci, base);
 	if (ret < 0) {
@@ -640,7 +693,10 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 
 	if (ci->is_otg)
 		/* if otg is supported, create struct usb_otg */
-		ci_hdrc_otg_init(ci);
+		ci_hdrc_otg_init(ci, NULL);
+
+	if (ci->transceiver)
+		ci->otg = ci->transceiver->otg;
 
 	if (ci->roles[CI_ROLE_GADGET])
 		ci->roles[CI_ROLE_GADGET]->start(ci);

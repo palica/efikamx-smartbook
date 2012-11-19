@@ -24,6 +24,7 @@
 #include <linux/usb.h>
 #include <linux/usb/hcd.h>
 #include <linux/usb/chipidea.h>
+#include <linux/usb/ulpi.h>
 
 #include "../host/ehci.h"
 
@@ -43,6 +44,7 @@ static int host_start(struct ci13xxx *ci)
 	struct usb_hcd *hcd;
 	struct ehci_hcd *ehci;
 	int ret;
+	u32 flags;
 
 	if (usb_disabled())
 		return -ENODEV;
@@ -64,11 +66,25 @@ static int host_start(struct ci13xxx *ci)
 	ehci->caps = ci->hw_bank.cap;
 	ehci->has_hostpc = ci->hw_bank.lpm;
 
+	if (ci->otg)
+		otg_set_vbus(ci->otg, true);
+
 	ret = usb_add_hcd(hcd, 0, 0);
 	if (ret)
 		usb_put_hcd(hcd);
 	else
 		ci->hcd = hcd;
+
+	/*
+	 * efikamx and efikasb have some hardware bug which is
+	 * preventing usb to work unless CHRGVBUS is set.
+	 * It's in violation of USB specs
+	 */
+	if (ci->otg && (ci->platdata->flags & CI13XXX_PORTSC_PTS_ULPI)) {
+		flags = usb_phy_io_read(ci->transceiver, ULPI_OTG_CTRL);
+		flags |= ULPI_OTG_CTRL_CHRGVBUS;
+		ret = usb_phy_io_write(ci->transceiver, flags, ULPI_OTG_CTRL);
+	}
 
 	return ret;
 }

@@ -169,7 +169,7 @@ struct ci13xxx {
 #define ID		0
 #define B_SESS_VALID	1
 	unsigned long events;
-	struct usb_otg			otg;
+	struct usb_otg			*otg;
 	/* used to control internal vbus regulator */
 	struct regulator *reg_vbus;
 };
