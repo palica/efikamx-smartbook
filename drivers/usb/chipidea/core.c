@@ -591,7 +591,9 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 
 	ret = ci_hdrc_gadget_init(ci);
 	if (ret)
-		dev_info(dev, "doesn't support gadget\n");
+		dev_info(dev,
+			"doesn't support gadget or its start fails: %d\n",
+			ret);
 
 	if (!ci->roles[CI_ROLE_HOST] && !ci->roles[CI_ROLE_GADGET]) {
 		dev_err(dev, "no supported roles\n");
@@ -614,6 +616,9 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 	if (ci->is_otg)
 		/* if otg is supported, create struct usb_otg */
 		ci_hdrc_otg_init(ci);
+
+	if (ci->roles[CI_ROLE_GADGET])
+		ci->roles[CI_ROLE_GADGET]->start(ci);
 
 	ret = ci_role_start(ci, ci->role);
 	if (ret) {

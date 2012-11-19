@@ -188,9 +188,13 @@ static inline int ci_role_start(struct ci13xxx *ci, enum ci_role role)
 	if (!ci->roles[role])
 		return -ENXIO;
 
-	ret = ci->roles[role]->start(ci);
-	if (!ret)
-		ci->role = role;
+	/* Only host role is supported at this function*/
+	if (role == CI_ROLE_HOST) {
+		ret = ci->roles[role]->start(ci);
+		if (!ret)
+			ci->role = role;
+	}
+
 	return ret;
 }
 
