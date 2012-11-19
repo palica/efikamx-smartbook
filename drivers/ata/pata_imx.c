@@ -26,6 +26,30 @@
 
 #define DRV_NAME "pata_imx"
 
+#define PATA_IMX_ATA_TIME_OFF		0x0
+#define PATA_IMX_ATA_TIME_ON		0x1
+#define PATA_IMX_ATA_TIME_1		0x2
+#define PATA_IMX_ATA_TIME_2W		0x3
+#define PATA_IMX_ATA_TIME_2R		0x4
+#define PATA_IMX_ATA_TIME_AX		0x5
+#define PATA_IMX_ATA_TIME_PIO_RDX	0x6
+#define PATA_IMX_ATA_TIME_4		0x7
+#define PATA_IMX_ATA_TIME_9		0x8
+#define PATA_IMX_ATA_TIME_M		0x9
+#define PATA_IMX_ATA_TIME_JN		0xa
+#define PATA_IMX_ATA_TIME_D		0xb
+#define PATA_IMX_ATA_TIME_K		0xc
+#define PATA_IMX_ATA_TIME_ACK		0xd
+#define PATA_IMX_ATA_TIME_ENV		0xe
+#define PATA_IMX_ATA_TIME_UDMA_RDX	0xf
+#define PATA_IMX_ATA_TIME_ZAH		0x10
+#define PATA_IMX_ATA_TIME_MLIX		0x11
+#define PATA_IMX_ATA_TIME_DVH		0x12
+#define PATA_IMX_ATA_TIME_DZFS		0x13
+#define PATA_IMX_ATA_TIME_DVS		0x14
+#define PATA_IMX_ATA_TIME_CVH		0x15
+#define PATA_IMX_ATA_TIME_SS		0x16
+#define PATA_IMX_ATA_TIME_CYC		0x17
 #define PATA_IMX_ATA_CONTROL		0x24
 #define PATA_IMX_ATA_CTRL_FIFO_RST_B	(1<<7)
 #define PATA_IMX_ATA_CTRL_ATA_RST_B	(1<<6)
@@ -41,6 +65,38 @@ struct pata_imx_priv {
 	u8 *host_regs;
 	u32 ata_ctl;
 };
+
+static uint16_t pio_t1[]    = { 70,  50,  30,  30,  25 };
+static uint16_t pio_t2_8[]  = { 290, 290, 290, 80,  70 };
+static uint16_t pio_t4[]    = { 30,  20,  15,  10,  10 };
+static uint16_t pio_t9[]    = { 20,  15,  10,  10,  10 };
+static uint16_t pio_tA[]    = { 50,  50,  50,  50,  50 };
+
+static void pata_imx_set_bus_timing(void __iomem *base, unsigned char mode)
+{
+	uint32_t T = 1000000000 / 66500000; /* IPG clock */
+
+	struct mxc_ata_config_regs *ata_regs;
+	ata_regs = (struct mxc_ata_config_regs *)base;
+
+	if (mode >= ARRAY_SIZE(pio_t1))
+		return;
+
+	/* Write TIME_OFF/ON/1/2W */
+	writeb(3,  base + PATA_IMX_ATA_TIME_OFF);
+	writeb(3,  base + PATA_IMX_ATA_TIME_ON);
+	writeb((pio_t1[mode] + T) / T, base + PATA_IMX_ATA_TIME_1);
+	writeb((pio_t2_8[mode] + T) / T, base + PATA_IMX_ATA_TIME_2W);
+
+	/* Write TIME_2R/AX/RDX/4 */
+	writeb((pio_t2_8[mode] + T) / T,  base + PATA_IMX_ATA_TIME_2R);
+	writeb((pio_tA[mode] + T) / T + 2,  base + PATA_IMX_ATA_TIME_AX);
+	writeb(1,  base + PATA_IMX_ATA_TIME_PIO_RDX);
+	writeb((pio_t4[mode] + T) / T,  base + PATA_IMX_ATA_TIME_4);
+
+	/* Write TIME_9 ; the rest of timing registers is irrelevant for PIO */
+	writeb((pio_t9[mode] + T) / T,  base + PATA_IMX_ATA_TIME_9);
+}
 
 static int pata_imx_set_mode(struct ata_link *link, struct ata_device **unused)
 {
@@ -151,6 +207,8 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
 	ap->ioaddr.altstatus_addr = ap->ioaddr.ctl_addr;
 
 	pata_imx_setup_port(&ap->ioaddr);
+
+	pata_imx_set_bus_timing(priv->host_regs, 4);
 
 	ata_port_desc(ap, "cmd 0x%llx ctl 0x%llx",
 		(unsigned long long)io_res->start + PATA_IMX_DRIVE_DATA,
