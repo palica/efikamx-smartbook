@@ -170,6 +170,8 @@ struct ci13xxx {
 #define B_SESS_VALID	1
 	unsigned long events;
 	struct usb_otg			otg;
+	/* used to control internal vbus regulator */
+	struct regulator *reg_vbus;
 };
 
 static inline struct ci_role_driver *ci_role(struct ci13xxx *ci)
