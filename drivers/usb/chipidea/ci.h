@@ -139,6 +139,7 @@ struct ci13xxx {
 	enum ci_role			role;
 	bool				is_otg;
 	struct work_struct		work;
+	struct delayed_work		dwork;
 	struct workqueue_struct		*wq;
 
 	struct dma_pool			*qh_pool;
@@ -164,6 +165,11 @@ struct ci13xxx {
 	bool				global_phy;
 	struct usb_phy			*transceiver;
 	struct usb_hcd			*hcd;
+	/* events handled at ci_role_work */
+#define ID		0
+#define B_SESS_VALID	1
+	unsigned long events;
+	struct usb_otg			otg;
 };
 
 static inline struct ci_role_driver *ci_role(struct ci13xxx *ci)
