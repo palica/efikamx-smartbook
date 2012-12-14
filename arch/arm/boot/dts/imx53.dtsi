@@ -248,6 +248,12 @@
 				status = "disabled";
 			};
 
+			srtc: rtc@53fa4000 {
+				compatible = "fsl,imx53-rtc", "fsl,imx25-rtc";
+				reg = <0x53fa4000 0x4000>;
+				interrupts = <24>;
+			};
+
 			iomuxc: iomuxc@53fa8000 {
 				compatible = "fsl,imx53-iomuxc";
 				reg = <0x53fa8000 0x4000>;
