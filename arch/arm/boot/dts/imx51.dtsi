@@ -162,12 +162,16 @@
 				reg = <0x73f80000 0x0200>;
 				interrupts = <18>;
 				status = "disabled";
+				clocks = <&clks 108>, <&clks 108>, <&clks 43>;
+				clock-names = "ipg", "ahb", "per";
 			};
 
 			usbhost1: usb@73f80200 {
 				compatible = "fsl,imx51-usb", "fsl,imx27-usb";
 				reg = <0x73f80200 0x0200>;
 				interrupts = <14>;
+				clocks = <&clks 108>, <&clks 108>, <&clks 43>;
+				clock-names = "ipg", "ahb", "per";
 				phy-mode = "utmiw";
 				status = "disabled";
 			};
@@ -176,6 +180,8 @@
 				compatible = "fsl,imx51-usb", "fsl,imx27-usb";
 				reg = <0x73f80400 0x0200>;
 				interrupts = <16>;
+				clocks = <&clks 108>, <&clks 108>, <&clks 43>;
+				clock-names = "ipg", "ahb", "per";
 				phy-mode = "utmi";
 				status = "disabled";
 			};
@@ -184,6 +190,8 @@
 				compatible = "fsl,imx51-usb", "fsl,imx27-usb";
 				reg = <0x73f80600 0x0200>;
 				interrupts = <17>;
+				clocks = <&clks 108>, <&clks 108>, <&clks 43>;
+				clock-names = "ipg", "ahb", "per";
 				status = "disabled";
 			};
 
