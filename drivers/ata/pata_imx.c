@@ -21,6 +21,7 @@
 #include <linux/ata.h>
 #include <linux/libata.h>
 #include <linux/platform_device.h>
+#include <linux/pinctrl/consumer.h>
 #include <linux/clk.h>
 
 #define DRV_NAME "pata_imx"
@@ -98,6 +99,7 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
 	struct pata_imx_priv *priv;
 	int irq = 0;
 	struct resource *io_res;
+	struct pinctrl *pinctrl;
 
 	io_res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (io_res == NULL)
@@ -119,6 +121,11 @@ static int __devinit pata_imx_probe(struct platform_device *pdev)
 	}
 
 	clk_prepare_enable(priv->clk);
+
+	pinctrl = devm_pinctrl_get_select_default(&pdev->dev);
+	if (IS_ERR(pinctrl)) {
+		return PTR_ERR(pinctrl);
+	}
 
 	host = ata_host_alloc(&pdev->dev, 1);
 	if (!host)
@@ -223,11 +230,16 @@ static const struct dev_pm_ops pata_imx_pm_ops = {
 };
 #endif
 
+static const struct of_device_id imx_pata_dt_ids[] = {
+	{ .compatible = "fsl,imx27-pata", },
+};
+
 static struct platform_driver pata_imx_driver = {
 	.probe		= pata_imx_probe,
 	.remove		= __devexit_p(pata_imx_remove),
 	.driver = {
 		.name		= DRV_NAME,
+		.of_match_table	= imx_pata_dt_ids,
 		.owner		= THIS_MODULE,
 #ifdef CONFIG_PM
 		.pm		= &pata_imx_pm_ops,
