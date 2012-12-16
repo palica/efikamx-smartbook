@@ -13,11 +13,47 @@
 #include <linux/irq.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
+#include <linux/gpio.h>
+#include <linux/delay.h>
 #include <asm/mach/arch.h>
 #include <asm/mach/time.h>
 
 #include "common.h"
 #include "mx51.h"
+
+#define GPIO_BACKLIGHT_POWER 108
+#define GPIO_LVDS_POWER 71
+#define GPIO_LVDS_RESET 69
+#define GPIO_LVDS_ENABLE 76
+#define GPIO_LCD_ENABLE 77
+
+static struct gpio efika_gpio_lvds[] __initdata = {
+	{ GPIO_BACKLIGHT_POWER, GPIOF_OUT_INIT_LOW, "backlight power" },
+	{ GPIO_LVDS_POWER, GPIOF_OUT_INIT_HIGH, "lvds power" },
+	{ GPIO_LVDS_RESET, GPIOF_OUT_INIT_LOW, "lvds reset" },
+	{ GPIO_LVDS_ENABLE, GPIOF_OUT_INIT_LOW, "lvds enable" },
+	{ GPIO_LCD_ENABLE, GPIOF_OUT_INIT_LOW, "lcd enable" },
+};
+
+static int efikasb_lvds_init(void)
+{
+	if (!of_machine_is_compatible("genesi,imx51-sb"))
+		return 0;
+
+	gpio_request_array(efika_gpio_lvds, ARRAY_SIZE(efika_gpio_lvds));
+
+	mdelay(5);
+	gpio_direction_output(GPIO_LVDS_RESET, 0);
+
+	mdelay(5);
+
+	gpio_direction_output(GPIO_LVDS_ENABLE, 1);
+	gpio_direction_output(GPIO_BACKLIGHT_POWER, 0);
+	gpio_direction_output(GPIO_LCD_ENABLE, 1);
+
+	return 0;
+}
+device_initcall(efikasb_lvds_init);
 
 static void __init imx51_dt_init(void)
 {
