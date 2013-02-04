@@ -1585,6 +1585,8 @@ static int ci13xxx_stop(struct usb_gadget *gadget,
 		_gadget_stop_activity(&ci->gadget);
 		spin_lock_irqsave(&ci->lock, flags);
 		pm_runtime_put(&ci->gadget.dev);
+	} else {
+		ci->driver = NULL;
 	}
 
 	spin_unlock_irqrestore(&ci->lock, flags);
