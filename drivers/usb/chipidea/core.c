@@ -360,27 +360,16 @@ static void ci_handle_id_switch(struct ci13xxx *ci)
 			ci_role(ci)->name, ci->roles[role]->name);
 
 		/* 1. Finish the current role */
-		if (ci->role == CI_ROLE_GADGET) {
-			usb_gadget_vbus_disconnect(&ci->gadget);
-			/* host doesn't care B_SESSION_VALID event */
-			ci_clear_otg_interrupt(ci, OTGSC_BSVIS);
-			ci_disable_otg_interrupt(ci, OTGSC_BSVIE);
-			ci->role = CI_ROLE_END;
-			/* reset controller */
-			hw_device_reset(ci, USBMODE_CM_IDLE);
-		} else if (ci->role == CI_ROLE_HOST) {
-			ci_role_stop(ci);
-			/* reset controller */
-			hw_device_reset(ci, USBMODE_CM_IDLE);
-		}
+		ci_role_stop(ci);
+		hw_device_reset(ci, USBMODE_CM_IDLE);
 
 		/* 2. Turn on/off vbus according to coming role */
-		if (ci_otg_role(ci) == CI_ROLE_GADGET) {
+		if (role == CI_ROLE_GADGET) {
 			otg_set_vbus(&ci->otg, false);
 			/* wait vbus lower than OTGSC_BSV */
 			hw_wait_reg(ci, OP_OTGSC, OTGSC_BSV, 0,
 					CI_VBUS_STABLE_TIMEOUT);
-		} else if (ci_otg_role(ci) == CI_ROLE_HOST) {
+		} else if (role == CI_ROLE_HOST) {
 			otg_set_vbus(&ci->otg, true);
 			/* wait vbus higher than OTGSC_AVV */
 			hw_wait_reg(ci, OP_OTGSC, OTGSC_AVV, OTGSC_AVV,
@@ -388,13 +377,7 @@ static void ci_handle_id_switch(struct ci13xxx *ci)
 		}
 
 		/* 3. Begin the new role */
-		if (ci_otg_role(ci) == CI_ROLE_GADGET) {
-			ci->role = role;
-			ci_clear_otg_interrupt(ci, OTGSC_BSVIS);
-			ci_enable_otg_interrupt(ci, OTGSC_BSVIE);
-		} else if (ci_otg_role(ci) == CI_ROLE_HOST) {
-			ci_role_start(ci, role);
-		}
+		ci_role_start(ci, role);
 	}
 }
 
@@ -433,8 +416,24 @@ static void ci_delayed_work(struct work_struct *work)
 	struct delayed_work *dwork = to_delayed_work(work);
 	struct ci13xxx *ci = container_of(dwork, struct ci13xxx, dwork);
 
-	otg_set_vbus(&ci->otg, true);
+	if (ci->role == CI_ROLE_GADGET) {
+		/*
+		 * if it is device mode:
+		 * - Enable vbus detect
+		 * - If it has already connected to host, notify udc
+		 */
+		ci_enable_otg_interrupt(ci, OTGSC_BSVIE);
+		ci_handle_vbus_change(ci);
+	} else if (ci->is_otg && (ci->role == CI_ROLE_HOST)) {
+		/* USB Device at the MicroB to A cable */
+		otg_set_vbus(&ci->otg, true);
+	}
+}
 
+static inline void ci_role_destroy(struct ci13xxx *ci)
+{
+	ci_hdrc_gadget_destroy(ci);
+	ci_hdrc_host_destroy(ci);
 }
 
 static ssize_t show_role(struct device *dev, struct device_attribute *attr,
@@ -664,23 +663,9 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 
 	hw_phymode_configure(ci);
 
-	ret = ci_role_start(ci, ci->role);
-	if (ret) {
-		dev_err(dev, "can't start %s role\n", ci_role(ci)->name);
-		ret = -ENODEV;
-		goto rm_wq;
-	}
+	ci_role_start(ci, ci->role);
 
 	otgsc = hw_read(ci, OP_OTGSC, ~0);
-	/*
-	 * if it is device mode:
-	 * - Enable vbus detect
-	 * - If it has already connected to host, notify udc
-	 */
-	if (ci->role == CI_ROLE_GADGET) {
-		ci_enable_otg_interrupt(ci, OTGSC_BSVIE);
-		ci_handle_vbus_change(ci);
-	}
 
 	platform_set_drvdata(pdev, ci);
 	ret = request_irq(ci->irq, ci_irq, IRQF_SHARED, ci->platdata->name,
@@ -690,18 +675,17 @@ static int ci_hdrc_probe(struct platform_device *pdev)
 
 	ret = device_create_file(dev, &dev_attr_role);
 	if (ret)
-		goto rm_attr;
+		goto free_irq;
 
-	/* Handle the situation that usb device at the MicroB to A cable */
-	if (ci->is_otg && !(otgsc & OTGSC_ID))
-		queue_delayed_work(ci->wq, &ci->dwork, msecs_to_jiffies(500));
+	/* Defer some operations */
+	queue_delayed_work(ci->wq, &ci->dwork, msecs_to_jiffies(200));
 
 	return ret;
 
-rm_attr:
-	device_remove_file(dev, &dev_attr_role);
+free_irq:
+	free_irq(ci->irq, ci);
 stop:
-	ci_role_stop(ci);
+	ci_role_destroy(ci);
 rm_wq:
 	flush_workqueue(ci->wq);
 	destroy_workqueue(ci->wq);
@@ -717,7 +701,7 @@ static int ci_hdrc_remove(struct platform_device *pdev)
 	destroy_workqueue(ci->wq);
 	device_remove_file(ci->dev, &dev_attr_role);
 	free_irq(ci->irq, ci);
-	ci_role_stop(ci);
+	ci_role_destroy(ci);
 
 	return 0;
 }

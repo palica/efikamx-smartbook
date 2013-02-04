@@ -105,3 +105,9 @@ int ci_hdrc_host_init(struct ci13xxx *ci)
 
 	return 0;
 }
+
+void ci_hdrc_host_destroy(struct ci13xxx *ci)
+{
+	if (ci->role == CI_ROLE_HOST)
+		host_stop(ci);
+}
