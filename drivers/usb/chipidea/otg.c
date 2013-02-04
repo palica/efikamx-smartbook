@@ -10,21 +10,28 @@
  * published by the Free Software Foundation.
  */
 
-#include <linux/platform_device.h>
-#include <linux/module.h>
-#include <linux/io.h>
-#include <linux/irq.h>
-#include <linux/kernel.h>
-#include <linux/slab.h>
-#include <linux/usb/gadget.h>
 #include <linux/usb/otg.h>
+#include <linux/usb/gadget.h>
 #include <linux/usb/chipidea.h>
 
 #include "ci.h"
-#include "udc.h"
 #include "bits.h"
-#include "host.h"
-#include "debug.h"
+
+void ci_clear_otg_interrupt(struct ci13xxx *ci, u32 bits)
+{
+	/* Only clear request bits */
+	hw_write(ci, OP_OTGSC, OTGSC_INT_STATUS_BITS, bits);
+}
+
+void ci_enable_otg_interrupt(struct ci13xxx *ci, u32 bits)
+{
+	hw_write(ci, OP_OTGSC, bits, bits);
+}
+
+void ci_disable_otg_interrupt(struct ci13xxx *ci, u32 bits)
+{
+	hw_write(ci, OP_OTGSC, bits, 0);
+}
 
 static int ci_otg_set_peripheral(struct usb_otg *otg,
 		struct usb_gadget *periph)
@@ -55,6 +62,7 @@ int ci_hdrc_otg_init(struct ci13xxx *ci)
 	ci->otg.set_host = ci_otg_set_host;
 	if (!IS_ERR_OR_NULL(ci->transceiver))
 		ci->transceiver->otg = &ci->otg;
+	ci_enable_otg_interrupt(ci, OTGSC_IDIE);
 
 	return 0;
 }
