@@ -131,6 +131,7 @@ struct hw_bank {
  * @hcd: pointer to usb_hcd for ehci host driver
  * @otg: for otg support
  * @events: events for otg, and handled at ci_role_work
+ * @reg_vbus: used to control internal vbus regulator
  */
 struct ci13xxx {
 	struct device			*dev;
@@ -170,6 +171,7 @@ struct ci13xxx {
 	struct usb_otg      		otg;
 	bool				id_event;
 	bool				b_sess_valid_event;
+	struct regulator		*reg_vbus;
 };
 
 static inline struct ci_role_driver *ci_role(struct ci13xxx *ci)
